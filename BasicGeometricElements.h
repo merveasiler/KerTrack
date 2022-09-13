@@ -1,0 +1,52 @@
+// @author Merve Asiler
+
+#pragma once
+
+#include "BaseMathOpUtils.h"
+
+struct Line {
+
+	/* Line Equation is: "point + t * directionVector" where
+		point and directionVector consist of x, y, z coordinates
+		and t is the parameter.
+	*/
+	double* point;
+	double* directionVector;
+
+	Line(double*, double*);
+	~Line();
+};
+
+struct HalfPlane : Line {
+
+	double* normalOnPlane;		// normal vector of border line on the plane
+	bool doesCoverNormalSide;	// which side of the plane line, is normalOnPlane side, or the other side?
+
+	HalfPlane(double*, double*, double*, bool);
+	~HalfPlane();
+};
+
+struct Plane {
+
+		/* Plane Equation is: "Ax + By + Cz + D = 0" where
+			A, B, C and D are ABCD[0], ABCD[1], ABCD[2], ABCD[3], resp.
+			such that <A,B,C> is the normal vector,
+			and D = -(<A,B,C> dotproduct point),
+			and point is any point on the plane having x, y, z coordinates.
+		*/
+	int idx;
+	double* ABCD;
+	double* point;
+
+	Plane(double*, double*);
+	~Plane();
+	void setId(int idx);
+};
+
+struct HalfSpace : Plane {
+
+	bool isLargerThanZero;
+
+	HalfSpace(double*, double*, bool);
+	~HalfSpace();
+};
