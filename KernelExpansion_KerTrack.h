@@ -29,8 +29,8 @@ struct EdgePartnerTriple {
 	};
 
 	~EdgePartnerTriple() {
-		delete[] edgeDirection;
-		delete[] startPoint;
+		delete[] this->edgeDirection;
+		delete[] this->startPoint;
 	}
 
 };
@@ -51,8 +51,9 @@ class KernelExpansion_KerTrack : public KernelExpansion {
 	void saveFoundEdgeToProcess(int base_id, int next_partner_id, double* startPoint, double* edgeDirectioner);
 	double* findInitialPoint_1();
 	double* findInitialPoint_2();
-	double* findInitialPoint_3();
+	void findInitialPoint_3(double* point);
 	double* findInitialPoint_4();
+	void filterRepetitions(double* distances, vector<double>& scalarsVector);
 
 public:
 	KernelExpansion_KerTrack(const Mesh& hostMesh);

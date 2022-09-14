@@ -11,6 +11,7 @@ void doExperimentForPaper(string meshName);
 
 void ComputeKernel(string meshName, string algoType);
 
+/*
 Mesh* ComputeKernelBySDFKer(Mesh* mesh, double cellSizeRatio);
 
 Mesh* ComputeKernelBySDFKerPlus(Mesh* mesh, double cellSizeRatio, double* extremeDirection);
@@ -18,6 +19,7 @@ Mesh* ComputeKernelBySDFKerPlus(Mesh* mesh, double cellSizeRatio, double* extrem
 Mesh* ComputeKernelByMDFKer(Mesh* mesh, int gridDimension[3]);
 
 Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio);
+*/
 
 Mesh* ComputeKernelByKerTrack(Mesh* mesh);
 
@@ -27,4 +29,3 @@ void FindKernelPoint_SDLP(string meshName);
 
 void SphericalParametrize(string meshName);
 
-void CompareFloodFillAndCGAL(string meshName);

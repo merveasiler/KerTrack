@@ -8,12 +8,11 @@ KernelExpansion::KernelExpansion(double* extremeDirection, const Mesh& hostMesh,
 
 	this->hostMeshptr = &hostMesh;
 	this->grid = grid;
-	this->kernel = new Mesh();
 	
-	halfSpaceSet = computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts());
+	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
 	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < halfSpaceSet.size(); i++)
-		halfSpaces[i] = halfSpaceSet[i];
+	for (int i = 0; i < this->halfSpaceSet.size(); i++)
+		halfSpaces[i] = &this->halfSpaceSet[i];
 	
 	this->initialPoint = sdlpMain(extremeDirection, halfSpaces, halfSpaceSet.size());	// compute initial kernel point
 	this->extremeCorners[0] = nullptr;	this->extremeCorners[1] = nullptr;
@@ -24,12 +23,11 @@ KernelExpansion::KernelExpansion(double* extremeDirection, const Mesh& hostMesh,
 KernelExpansion::KernelExpansion(const Mesh& hostMesh, double cellSizeRatio) {
 
 	this->hostMeshptr = &hostMesh;
-	this->kernel = new Mesh();
 
-	halfSpaceSet = computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts());
+	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
 	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < halfSpaceSet.size(); i++)
-		halfSpaces[i] = halfSpaceSet[i];
+	for (int i = 0; i < this->halfSpaceSet.size(); i++)
+		halfSpaces[i] = &this->halfSpaceSet[i];
 
 	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
 	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
@@ -50,12 +48,11 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh, double cellSizeRatio) {
 KernelExpansion::KernelExpansion(const Mesh& hostMesh, int gridDimension[3]) {
 
 	this->hostMeshptr = &hostMesh;
-	this->kernel = new Mesh();
 
-	halfSpaceSet = computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts());
+	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
 	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < halfSpaceSet.size(); i++)
-		halfSpaces[i] = halfSpaceSet[i];
+	for (int i = 0; i < this->halfSpaceSet.size(); i++)
+		halfSpaces[i] = &this->halfSpaceSet[i];
 
 	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
 	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
@@ -77,29 +74,8 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh) {
 
 	this->hostMeshptr = &hostMesh;
 	this->kernel = new Mesh();
+	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
 
-	halfSpaceSet = computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts());
-/*	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < halfSpaceSet.size(); i++)
-		halfSpaces[i] = halfSpaceSet[i];
-
-	this->initialPoint = new double[18];
-	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
-	for (int i = 0; i < 6; i++) {
-		double* extremePoint = sdlpMain(extremeDirections[i], halfSpaces, halfSpaceSet.size());	// compute initial kernel point at the given extreme direction
-		if (extremePoint) {
-			for (int j = 0; j < 3; j++)
-				this->initialPoint[i * 3 + j] = extremePoint[j];
-			delete[] extremePoint;
-		}
-		else {
-			delete[] this->initialPoint;
-			this->initialPoint = nullptr;
-		}
-
-	}
-	delete[] halfSpaces;
-	*/
 }
 
 KernelExpansion::~KernelExpansion() {
@@ -115,10 +91,6 @@ KernelExpansion::~KernelExpansion() {
 		extremeCorners[1] = nullptr;
 	}
 	
-	for (int i = 0; i < halfSpaceSet.size(); i++) {
-		delete halfSpaceSet[i];
-		halfSpaceSet[i] = nullptr;
-	}
 	halfSpaceSet.clear();
 
 	for (int i = 0; i < handledCells.size(); i++) {
@@ -136,7 +108,7 @@ double* KernelExpansion::getInitialKernelPoint() {
 	return initialPoint;
 }
 
-vector<HalfSpace*>& KernelExpansion::getHalfSpaceSet() {
+vector<HalfSpace>& KernelExpansion::getHalfSpaceSet() {
 	return halfSpaceSet;
 }
 

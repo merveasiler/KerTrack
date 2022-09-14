@@ -34,7 +34,7 @@ int findPeakVertexID(Triangle* triangle, Edge* edge);
 
 double* findLine2LineIntersection(Line* line1, Line* line2);        // assumes that they have a certain intersection point
 
-double  findLinePlaneIntersection(Line* line, Plane* plane);         // returns the parameter for the line where it intersects with the plane
+double  findLinePlaneIntersection(Line& line, Plane& plane);         // returns the parameter for the line where it intersects with the plane
 
 double findRayTriangleIntersection(Line* ray, TriangleWithVerts* triangleWV);  // returns the parameter for the ray where it intersects with the triangle
 
@@ -48,9 +48,9 @@ int isPointInRegion(const double* point, const HalfSpace* halfSpace);
 
 double findClosestValueSatisfiedByPoint(const double point[3], const vector<HalfSpace*>& halfSpaceContainer);
 
-double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace*>& halfSpaceContainer);
+double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer);
 
-vector<HalfSpace*> computeHalfSpacesFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts);
+void computeHalfSpacesFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts, vector<HalfSpace>& halfSpaces);
 
 vector<double*> computeHalfSpaceCoeffsFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts);
 

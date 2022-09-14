@@ -29,14 +29,14 @@ double* findLine2LineIntersection(Line* line1, Line* line2) {	// Assume that the
 	return point;
 }
 
-double findLinePlaneIntersection(Line* line, Plane* plane) {
+double findLinePlaneIntersection(Line& line, Plane& plane) {
 	/* Assume they intersect at q = p + v*t (the rhs is parametric line equation)
 	   A * q.x + B * q.y + C * q.z + D = 0	(comes from the plane equation)
 	*/
 	
-	double midProduct = dotProduct(plane->ABCD, line->point);
-	double numerator = midProduct + plane->ABCD[3];
-	double denominator = dotProduct(plane->ABCD, line->directionVector);
+	double midProduct = dotProduct(plane.ABCD, line.point);
+	double numerator = midProduct + plane.ABCD[3];
+	double denominator = dotProduct(plane.ABCD, line.directionVector);
 	
 	if (abs(denominator) < 3 * EPSILON)
 		return numeric_limits<double>::infinity();
@@ -48,7 +48,7 @@ double findRayTriangleIntersection(Line* ray, TriangleWithVerts* triangleWV) {
 	triangleWV->computeNormal(triangleWV->vertices[0], triangleWV->vertices[1], triangleWV->vertices[2]);
 	Plane* plane = new Plane(triangleWV->vertices[0]->coords, triangleWV->normal);
 
-	double coeff = findLinePlaneIntersection(ray, plane);
+	double coeff = findLinePlaneIntersection(*ray, *plane);
 	delete plane;
 	if (isinf(coeff)) {
 		delete[] triangleWV->normal;
@@ -222,16 +222,15 @@ double findClosestValueSatisfiedByPoint(const double point[3], const vector<Half
 	return -closestValue;
 }
 
-double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace*>& halfSpaceContainer) {
+double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer) {
 	
 	double* valuesVector = new double[halfSpaceContainer.size()];
 
 	for (unsigned int i = 0; i < halfSpaceContainer.size(); i++) {
-		HalfSpace* halfSpace = halfSpaceContainer[i];
 
-		double total = halfSpace->ABCD[3];
+		double total = halfSpaceContainer[i].ABCD[3];
 		for (unsigned int j = 0; j < 3; j++) {
-			double mult = halfSpace->ABCD[j] * point[j];
+			double mult = halfSpaceContainer[i].ABCD[j] * point[j];
 			total += mult;
 		}
 
@@ -241,61 +240,32 @@ double* findValueVectorSatisfiedByPoint(const double point[3], const vector<Half
 	return valuesVector;
 }
 
-vector<HalfSpace*> computeHalfSpacesFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts) {
+void computeHalfSpacesFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts, vector<HalfSpace>& halfSpaces) {
 	
 	clock_t begin = clock();
-	vector<HalfSpace*> halfSpaces;
 	double* testPoint = verts[tris[0]->corners[0]]->coords;	// to be used while checking half-spaces are the same or different
-	//double _EPSILON = 3 * EPSILON;
-	//vector<double> distances;
 
 	for (int i = 0; i < tris.size(); i++) {
 		Triangle* tri = tris[i];
-		double normal[3];
-		tri->computeNormal(verts[tri->corners[0]], verts[tri->corners[1]], verts[tri->corners[2]], normal);
-		HalfSpace* halfSpace = new HalfSpace((double*)verts[tri->corners[0]]->coords, normal, false);
-/*		double dist = halfSpace->ABCD[3];
-		for (unsigned int k = 0; k < 3; k++)
-			dist += halfSpace->ABCD[k] * testPoint[k];
-
-		// is this half-space met before
-		bool metBefore = false;
-		for (int j = 0; j < halfSpaces.size(); j++) {
-			if (abs(dist - distances[j]) < _EPSILON) {
-				if (isTripleSame(halfSpaces[j]->ABCD, halfSpace->ABCD)) {
-					metBefore = true;
-					break;
-				}
-			}
-		}
-
-		if (!metBefore) {*/
-			halfSpaces.push_back(halfSpace);
-		/*	distances.push_back(dist);
-		}
-		delete[] tri->normal;
-		tri->normal = nullptr;
-		*/
+		HalfSpace halfSpace((double*)verts[tri->corners[0]]->coords, tri->normal, false);
+		halfSpaces.push_back(halfSpace);
 	}
 
-	//distances.clear();
 	clock_t end = clock();
 	cout << "Halfspace time: " << double(end - begin) / CLOCKS_PER_SEC << endl;
-	return halfSpaces;
 
 }
 
 vector<double*> computeHalfSpaceCoeffsFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts) {
 
 	vector<double*> halfSpaceCoeffs;
-	vector<HalfSpace*> halfSpaces = computeHalfSpacesFromTriangles(tris, verts);
+	vector<HalfSpace> halfSpaces;
+	computeHalfSpacesFromTriangles(tris, verts, halfSpaces);
 
 	for (int i = 0; i < halfSpaces.size(); i++) {
 		double* coeffs = new double[4];
 		for (int j = 0; j < 4; j++)
-			coeffs[j] = halfSpaces[i]->ABCD[j];
-		delete halfSpaces[i];
-		halfSpaces[i] = nullptr;
+			coeffs[j] = halfSpaces[i].ABCD[j];
 		halfSpaceCoeffs.push_back(coeffs);
 	}
 	halfSpaces.clear();

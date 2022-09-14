@@ -1,6 +1,7 @@
 // @author Merve Asiler
 
 #include "BaseMathOpUtils.h"
+#include <iostream>
 
 double computeLength(const double* vect) {
 	return sqrt((vect[0] * vect[0]) + (vect[1] * vect[1]) + (vect[2] * vect[2]));

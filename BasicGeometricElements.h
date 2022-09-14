@@ -10,8 +10,8 @@ struct Line {
 		point and directionVector consist of x, y, z coordinates
 		and t is the parameter.
 	*/
-	double* point;
-	double* directionVector;
+	double point[3];
+	double directionVector[3];
 
 	Line(double*, double*);
 	~Line();
@@ -19,7 +19,7 @@ struct Line {
 
 struct HalfPlane : Line {
 
-	double* normalOnPlane;		// normal vector of border line on the plane
+	double normalOnPlane[3];		// normal vector of border line on the plane
 	bool doesCoverNormalSide;	// which side of the plane line, is normalOnPlane side, or the other side?
 
 	HalfPlane(double*, double*, double*, bool);
@@ -35,8 +35,8 @@ struct Plane {
 			and point is any point on the plane having x, y, z coordinates.
 		*/
 	int idx;
-	double* ABCD;
-	double* point;
+	double ABCD[3];
+	double point[3];
 
 	Plane(double*, double*);
 	~Plane();

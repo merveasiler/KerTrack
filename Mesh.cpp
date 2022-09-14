@@ -136,6 +136,7 @@ void Mesh::addTriangle(int v1, int v2, int v3)
 		edges[edge_id]->triList.push_back(idx);
 	}
 
+	tris[idx]->computeNormal(verts[v1], verts[v2], verts[v3]);
 }
 
 void Mesh::addEdge(int v1, int v2)

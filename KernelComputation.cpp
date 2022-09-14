@@ -1,12 +1,13 @@
 // @author Merve Asiler
 
 #include "KernelComputation.h"
+/*
 #include "KernelExpansion_SDFKer.h"
 #include "KernelExpansion_SDFKerPlus.h"
 #include "KernelExpansion_MDFKer.h"
 #include "KernelExpansion_MDFKerPlus.h"
+*/
 #include "KernelExpansion_KerTrack.h"
-#include "SomehowKernel.h"
 #include "ComputeKernelByCGAL.h"
 #include "sdlp.h"
 #include "SceneManager.h"
@@ -75,7 +76,7 @@ void doExperimentForPaper(string meshName) {
 
 		// ... SDF-KER
 	for (int j = 0, i = 1 + kernels.size() / 2; i < kernels.size(); i++, j++) {
-		kernels[i] = ComputeKernelBySDFKer(mesh, cellSizeRatios[j]);
+		kernels[i] = NULL;	// ComputeKernelBySDFKer(mesh, cellSizeRatios[j]);
 		double* position = new double[3]{ 0, objectWidth[1] + breakWidth[1], 0 };	// on the upper row
 		position[0] = j * (objectWidth[0] + breakWidth[0]);
 		positions.push_back(position);
@@ -143,6 +144,7 @@ void ComputeKernel(string meshName, string algoType) {
 	Mesh* kernel = nullptr;
 
 	// Compute kernel
+	/*
 	if (algoType == "sdfker")
 		kernel = ComputeKernelBySDFKer(mesh, cellSizeRatio);
 	else if (algoType == "sdfker_plus")
@@ -151,7 +153,7 @@ void ComputeKernel(string meshName, string algoType) {
 		kernel = ComputeKernelByMDFKer(mesh, gridDimension);
 	else if (algoType == "mdfker_plus")
 		kernel = ComputeKernelByMDFKerPlus(mesh, cellSizeRatio);
-	else if (algoType == "kertrack")
+	else*/ if (algoType == "kertrack")
 		kernel = ComputeKernelByKerTrack(mesh);
 	else if (algoType == "kernel_by_cgal")
 		kernel = ComputeKernelByCGAL(mesh, extremeDirection);
@@ -169,6 +171,7 @@ void ComputeKernel(string meshName, string algoType) {
 
 }
 
+/*
 Mesh* ComputeKernelBySDFKer(Mesh* mesh, double cellSizeRatio) {
 
 	// Execute by <executionCount>-many times
@@ -358,6 +361,7 @@ Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio) {
 	return kernel;
 
 }
+*/
 
 Mesh* ComputeKernelByKerTrack(Mesh* mesh) {
 
@@ -441,53 +445,6 @@ Mesh* ComputeKernelByCGAL(Mesh* mesh, double* extremeDirection) {
 	double elapsed_secs = totalTime / executionCount;
 	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by CGAL." << endl;
 	return kernel;
-}
-
-void CompareFloodFillAndCGAL(string meshName) {
-	Mesh* mesh = new Mesh();
-	if (meshName.substr(meshName.length() - 3, 3) == "off")
-		mesh->loadOff(meshName.c_str());
-	else
-		mesh->loadObj(meshName.c_str());
-
-	double* extremeDirection = extremeDirections[4];
-	double cellSizeRatio = 0.035;// cellSizeRatios[6][1];
-	Grid grid(mesh);
-	grid.constructGridByDiagonalRatio(cellSizeRatio);
-	//KernelExpansion* kernelExpansion = new KernelExpansion_MDFKer(extremeDirection, *mesh, grid);	// ALGO: MINIMUM_DISTANCED_PLANE_TRIPLE
-	KernelExpansion* kernelExpansion = new KernelExpansion_SDFKer(*mesh, cellSizeRatio);
-
-	// Compute kernel by flood fill (ff)
-	clock_t begin_ff = clock();
-	kernelExpansion->expandKernel();
-	clock_t end_ff = clock();
-	double elapsed_secs_ff = double(end_ff - begin_ff) / CLOCKS_PER_SEC;
-	cout << "Flood fill kernel computation has been completed in " << elapsed_secs_ff << " second(s)." << endl;
-	Mesh* kernel_ff = kernelExpansion->getKernel();
-	//Mesh* incompleteKernel = kernelExpansion->getKernel();												// ALGO: MINIMUM_DISTANCED_PLANE_TRIPLE
-	//Mesh* kernel_ff = computeConvexHull(incompleteKernel->getAllVerts());									// ALGO: MINIMUM_DISTANCED_PLANE_TRIPLE
-
-
-	// Compute kernel by cgal
-	clock_t begin_cgal = clock();
-	double* kernelPoint = kernelExpansion->getInitialKernelPoint();
-	Mesh* kernel_cgal = computeKernelByCGAL(mesh, kernelPoint);
-	clock_t end_cgal = clock();
-	double elapsed_secs_cgal = double(end_cgal - begin_cgal) / CLOCKS_PER_SEC;
-	cout << "CGAL kernel computation has been completed in " << elapsed_secs_cgal << " second(s)." << endl << endl;
-	
-	//cout << "num of found kernel vertices: " << incompleteKernel->getNumOfVerts() << endl;	// ALGO: MINIMUM_DISTANCED_PLANE_TRIPLE
-	//delete incompleteKernel;																	// ALGO: MINIMUM_DISTANCED_PLANE_TRIPLE
-	cout << "num of convex hull kernel vertices: " << kernel_ff->getNumOfVerts() << endl;
-
-	// Produce color map
-	vector<double> distances = produceColorSource(kernel_cgal, kernel_ff);
-	drawDoubleMeshToScene(kernel_cgal, mesh, distances);
-
-	delete kernel_ff;
-	delete kernel_cgal;
-	delete kernelExpansion;
-	delete mesh;
 }
 
 void FindKernelPoint_SDLP(string meshName) {

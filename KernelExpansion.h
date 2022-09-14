@@ -44,7 +44,7 @@ protected:
 
 	queue<int*> possibleKernelCells;		// the cells which may include some pieces of the kernel
 	vector<int*> handledCells;				// the cells which were previously checked or in queue to be checked for being inside kernel 
-	vector<HalfSpace*> halfSpaceSet;
+	vector<HalfSpace> halfSpaceSet;
 
 	double** computeCellCoords(double initialCorner[3], double finalCorner[3]);
 
@@ -62,7 +62,7 @@ public:
 	~KernelExpansion();
 	Mesh* getKernel();
 	double* getInitialKernelPoint();
-	vector<HalfSpace*>& getHalfSpaceSet();
+	vector<HalfSpace>& getHalfSpaceSet();
 	Grid getGrid();
 	virtual void expandKernel() = 0;
 };

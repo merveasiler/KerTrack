@@ -216,7 +216,7 @@ bool isEdgeConvex(Triangle* t1, Triangle* t2, vector<Vertex*> vertexSet) {
 
 	// find the intersection
 	t1_line = new Line(p->coords, t1->normal);
-	double parameter = findLinePlaneIntersection(t1_line, t2_plane);
+	double parameter = findLinePlaneIntersection(*t1_line, *t2_plane);
 	delete t1_line;
 	delete t2_plane;
 
