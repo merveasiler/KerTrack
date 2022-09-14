@@ -48,11 +48,10 @@ double* diffVects(const double* vect1, const double* vect2) {
 	return output;
 }
 
-double* multVect(const double* vect, double coeff) {
-	double* output = new double[3];
+void multVect(const double* vect, double coeff, double* output) {
+
 	for (unsigned int i = 0; i < 3; i++)
 		output[i] = vect[i] * coeff;
-	return output;
 }
 
 double findCosAngleBetween(const double* vect1, const double* vect2) {

@@ -73,7 +73,7 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh, int gridDimension[3]) {
 KernelExpansion::KernelExpansion(const Mesh& hostMesh) {
 
 	this->hostMeshptr = &hostMesh;
-	computeHalfSpacesFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts(), this->halfSpaceSet);
+	//computeHalfSpacesFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts(), this->halfSpaceSet);
 
 }
 

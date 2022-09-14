@@ -32,7 +32,7 @@ double* sumVects(const double* vect1, const double* vect2);
 
 double* diffVects(const double* vect1, const double* vect2);
 
-double* multVect(const double* vect, double coeff);
+void multVect(const double* vect, double coeff, double* output);
 
 double findCosAngleBetween(const double* vect1, const double* vect2);
 

@@ -366,15 +366,15 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
 	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
 		KernelExpansion_KerTrack kertrack(mesh);
-		kertrack.expandKernel();
+		clock_t begin = clock();
+		kertrack.expandKernel(); 
+		clock_t end = clock();
 		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
 		if (incompleteKernel.getNumOfVerts() > 0) {
 			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
 			delete kernel;
 		}
-		clock_t end = clock();
 		totalTime += double(end - begin) / CLOCKS_PER_SEC;
 	}
 	

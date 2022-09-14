@@ -242,14 +242,11 @@ double* findValueVectorSatisfiedByPoint(const double point[3], const vector<Half
 
 void computeHalfSpacesFromTriangles(const vector<Triangle>& tris, const vector<Vertex>& verts, vector<HalfSpace>& halfSpaces) {
 	
-	clock_t begin = clock();
 	for (int i = 0; i < tris.size(); i++) {
 		Triangle tri = tris[i];
 		HalfSpace halfSpace(verts[tri.corners[0]].coords, tri.normal, false);
 		halfSpaces.push_back(halfSpace);
 	}
-	clock_t end = clock();
-	cout << "Halfspace time: " << double(end - begin) / CLOCKS_PER_SEC << endl;
 
 }
 

@@ -39,9 +39,10 @@ class KernelExpansion_KerTrack : public KernelExpansion {
 	vector<ProcessColor> isKernelFace;
 	double _EPSILON = 3 * EPSILON;
 
-	tuple<int, double*> findTheClosestHalfSpace(double point[3]);
-	tuple<int, double*> findTheClosestHalfSpace(double point[3], int id);
-	tuple<vector<int>, double*> findTheClosestHalfSpace(int vertexId, double* lineDirection, int lineParent1Id, int lineParent2Id);
+	vector<double> initialize(double* point);
+	int findTheClosestHalfSpace(double* point, vector<double>& scalarsVector);
+	int findTheClosestHalfSpace(double* point, int id);
+	vector<int> findTheClosestHalfSpace(int vertexId, double* lineDirection, int lineParent1Id, int lineParent2Id, double* newpoint);
 	void orderTheFaces(int base_id, int partner_id, vector<int> next_partner_ids, double* startPoint, double* currentEdgeDirection);
 	bool shouldSaveEdge(int hs1_id, int hs2_id);
 	void saveFoundEdgeToProcess(int base_id, int next_partner_id, double* startPoint, double* edgeDirectioner);
