@@ -21,9 +21,9 @@ Mesh* ComputeKernelByMDFKer(Mesh* mesh, int gridDimension[3]);
 Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio);
 */
 
-Mesh* ComputeKernelByKerTrack(Mesh* mesh);
+Mesh* ComputeKernelByKerTrack(Mesh& mesh);
 
-Mesh* ComputeKernelByCGAL(Mesh* mesh, double* extremeDirection);
+Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection);
 
 void FindKernelPoint_SDLP(string meshName);
 

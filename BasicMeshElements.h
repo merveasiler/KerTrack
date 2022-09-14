@@ -7,29 +7,28 @@
 struct Vertex
 {
 	int idx;
-	double* coords = NULL;
-	double* normal = NULL;
+	double coords[3];
 
 	// adjacencies
 	vector< int > vertList;
 	vector< int > triList;
 	vector< int > edgeList;
 
-	Vertex(int i, double* c) : idx(i), coords(c) { normal = new double[3]; };
-	void setNormal(double x, double y, double z);
+	Vertex() {};
+	Vertex(int i, double* c);
 	~Vertex();
 };
 
 struct Edge
 {
 	int idx;
-	int* endVerts = NULL;
+	int endVerts[2];
 	double length;
 
 	// adjacency
 	vector< int > triList;
 
-	Edge(int i, int* c) : idx(i), endVerts(c) {};
+	Edge(int i, int* c);
 	~Edge();
 	void computeLength(Vertex* v1, Vertex* v2);
 };
@@ -37,10 +36,8 @@ struct Edge
 struct Triangle
 {
 	int idx;
-	int* corners = NULL;
-	double* center = NULL;	// center of gravity
-	double* normal = NULL;
-	double* areaVect = NULL; // unit area vector
+	int corners[3];
+	double normal[3];
 	vector< int > edgeList;
 	vector< int > triList; // neighbor tris
 	vector< double > angleList;
@@ -48,17 +45,15 @@ struct Triangle
 	double squish;
 
 	Triangle() {};
-	Triangle(int i, int* c) : idx(i), corners(c) {};
+	Triangle(int i, int* c);
 	Triangle(const Triangle& t);	// shallow copy
 	~Triangle();
 
-	void computeCenter(Vertex* v1, Vertex* v2, Vertex* v3);
-
 	void computeNormal(Vertex* v1, Vertex* v2, Vertex* v3);
 
-	void computeNormal(Vertex* v1, Vertex* v2, Vertex* v3, double* normal);
+	double* computeCenter(Vertex* v1, Vertex* v2, Vertex* v3);
 
-	void computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3);
+	double* computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3);
 
 	void setAngSkewness(double angSkewness);
 
@@ -81,23 +76,3 @@ struct TriangleWithVerts : public Triangle {
 	double* computeBarycentricCoords(double point[3]);
 };
 
-struct Tetrahedron
-{
-	int idx;			// also the id of base triangle of the tetrahedron
-	Vertex* peak;		// peak point of the tetrahedron
-	double transformationDiff;
-
-	Tetrahedron(int i, Vertex* p) : idx(i), peak(p) {};
-	~Tetrahedron() {
-		delete peak;
-	};
-
-	void setTransformationDiff(double transformationDiff) {
-		this->transformationDiff = transformationDiff;
-	}
-
-	double getTransformationDiff() {
-		return transformationDiff;
-	}
-
-};

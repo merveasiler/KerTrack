@@ -33,6 +33,6 @@ Mesh* convertCGALPolyhedronToMesh(CGALPolyhedron poly);
 CGALMesh convertMeshToCGALMesh(Mesh* mesh);
 CGALMesh convertMeshToCGALGraphMesh(Mesh* mesh);
 double* computeHausdorffDistance(Mesh* mesh1, Mesh* mesh2);
-Mesh* computeConvexHull(const vector<Vertex*>& vertices);
+Mesh* computeConvexHull(const vector<Vertex>& vertices);
 Mesh* computeConvexHull(string meshName);
 

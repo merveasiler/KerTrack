@@ -16,7 +16,7 @@ void Painter::getColorfulShapeSep(Mesh* mesh, SoSeparator* res, vector<double> c
 
 	SoCoordinate3* coords = new SoCoordinate3();
 	for (int c = 0; c < mesh->getNumOfVerts(); c++) {
-		coords->point.set1Value(c, mesh->getVertex(c)->coords[0], mesh->getVertex(c)->coords[1], mesh->getVertex(c)->coords[2]);
+		coords->point.set1Value(c, mesh->getVertex(c).coords[0], mesh->getVertex(c).coords[1], mesh->getVertex(c).coords[2]);
 
 		// Paint all vertices with different color
 		//mat->diffuseColor.set1Value(c, 0, 0, 1.0);
@@ -31,9 +31,9 @@ void Painter::getColorfulShapeSep(Mesh* mesh, SoSeparator* res, vector<double> c
 	int start_index = mesh->getNumOfVerts();
 	for (int c = 0; c < mesh->getNumOfTris(); c++)
 	{
-		faceSet->coordIndex.set1Value(start_index + c * 4, mesh->getTriangle(c)->corners[0]);
-		faceSet->coordIndex.set1Value(start_index + c * 4 + 1, mesh->getTriangle(c)->corners[1]);
-		faceSet->coordIndex.set1Value(start_index + c * 4 + 2, mesh->getTriangle(c)->corners[2]);
+		faceSet->coordIndex.set1Value(start_index + c * 4, mesh->getTriangle(c).corners[0]);
+		faceSet->coordIndex.set1Value(start_index + c * 4 + 1, mesh->getTriangle(c).corners[1]);
+		faceSet->coordIndex.set1Value(start_index + c * 4 + 2, mesh->getTriangle(c).corners[2]);
 		faceSet->coordIndex.set1Value(start_index + c * 4 + 3, -1);
 	}
 
@@ -56,16 +56,16 @@ void Painter::getShapeSep(Mesh* mesh, SoSeparator* res)
 
 	SoCoordinate3* coords = new SoCoordinate3();
 	for (int c = 0; c < mesh->getNumOfVerts(); c++)
-		coords->point.set1Value(c, mesh->getVertex(c)->coords[0],
-			mesh->getVertex(c)->coords[1],
-			mesh->getVertex(c)->coords[2]);
+		coords->point.set1Value(c, mesh->getVertex(c).coords[0],
+			mesh->getVertex(c).coords[1],
+			mesh->getVertex(c).coords[2]);
 
 	SoIndexedFaceSet* faceSet = new SoIndexedFaceSet();
 	for (int c = 0; c < mesh->getNumOfTris(); c++)
 	{
-		faceSet->coordIndex.set1Value(c * 4, mesh->getTriangle(c)->corners[0]);
-		faceSet->coordIndex.set1Value(c * 4 + 1, mesh->getTriangle(c)->corners[1]);
-		faceSet->coordIndex.set1Value(c * 4 + 2, mesh->getTriangle(c)->corners[2]);
+		faceSet->coordIndex.set1Value(c * 4, mesh->getTriangle(c).corners[0]);
+		faceSet->coordIndex.set1Value(c * 4 + 1, mesh->getTriangle(c).corners[1]);
+		faceSet->coordIndex.set1Value(c * 4 + 2, mesh->getTriangle(c).corners[2]);
 		faceSet->coordIndex.set1Value(c * 4 + 3, -1);
 	}
 
@@ -88,16 +88,16 @@ void Painter::getShapeSep(Mesh* mesh, MaterialSetting* materialSetting, SoSepara
 
 	SoCoordinate3* coords = new SoCoordinate3();
 	for (int c = 0; c < mesh->getNumOfVerts(); c++)
-		coords->point.set1Value(c, mesh->getVertex(c)->coords[0],
-			mesh->getVertex(c)->coords[1],
-			mesh->getVertex(c)->coords[2]);
+		coords->point.set1Value(c, mesh->getVertex(c).coords[0],
+			mesh->getVertex(c).coords[1],
+			mesh->getVertex(c).coords[2]);
 
 	SoIndexedFaceSet* faceSet = new SoIndexedFaceSet();
 	for (int c = 0; c < mesh->getNumOfTris(); c++)
 	{
-		faceSet->coordIndex.set1Value(c * 4, mesh->getTriangle(c)->corners[0]);
-		faceSet->coordIndex.set1Value(c * 4 + 1, mesh->getTriangle(c)->corners[1]);
-		faceSet->coordIndex.set1Value(c * 4 + 2, mesh->getTriangle(c)->corners[2]);
+		faceSet->coordIndex.set1Value(c * 4, mesh->getTriangle(c).corners[0]);
+		faceSet->coordIndex.set1Value(c * 4 + 1, mesh->getTriangle(c).corners[1]);
+		faceSet->coordIndex.set1Value(c * 4 + 2, mesh->getTriangle(c).corners[2]);
 		faceSet->coordIndex.set1Value(c * 4 + 3, -1);		
 	}
 
@@ -149,9 +149,9 @@ void Painter::getShapeSep(Mesh* mesh, vector<double*>& coveringNodes, vector<int
 		// Add vertex info
 		SoCoordinate3* coords = new SoCoordinate3();
 		for (int c = 0; c < mesh->getNumOfVerts(); c++)
-			coords->point.set1Value(c, mesh->getVertex(c)->coords[0],
-				mesh->getVertex(c)->coords[1],
-				mesh->getVertex(c)->coords[2]);
+			coords->point.set1Value(c, mesh->getVertex(c).coords[0],
+				mesh->getVertex(c).coords[1],
+				mesh->getVertex(c).coords[2]);
 		trisSep->addChild(coords);
 
 		// Add triangle info
@@ -159,9 +159,9 @@ void Painter::getShapeSep(Mesh* mesh, vector<double*>& coveringNodes, vector<int
 		for (int c = 0, t = 0; c < numOfTrisPerNode[i]; c++)
 		{
 			if (count(drawnTris.begin(), drawnTris.end(), trisIds[i][c]) == 0) {
-				faceSet->coordIndex.set1Value(t * 4, mesh->getTriangle(trisIds[i][c])->corners[0]);
-				faceSet->coordIndex.set1Value(t * 4 + 1, mesh->getTriangle(trisIds[i][c])->corners[1]);
-				faceSet->coordIndex.set1Value(t * 4 + 2, mesh->getTriangle(trisIds[i][c])->corners[2]);
+				faceSet->coordIndex.set1Value(t * 4, mesh->getTriangle(trisIds[i][c]).corners[0]);
+				faceSet->coordIndex.set1Value(t * 4 + 1, mesh->getTriangle(trisIds[i][c]).corners[1]);
+				faceSet->coordIndex.set1Value(t * 4 + 2, mesh->getTriangle(trisIds[i][c]).corners[2]);
 				faceSet->coordIndex.set1Value(t * 4 + 3, -1);
 				drawnTris.push_back(trisIds[i][c]);
 				t++;
@@ -209,9 +209,9 @@ void Painter::getShapeSepByEdges(Mesh* mesh, MaterialSetting* materialSetting, S
 
 	SoCoordinate3* coords = new SoCoordinate3();
 	for (int c = 0; c < mesh->getNumOfVerts(); c++)
-		coords->point.set1Value(c, mesh->getVertex(c)->coords[0],
-			mesh->getVertex(c)->coords[1],
-			mesh->getVertex(c)->coords[2]);
+		coords->point.set1Value(c, mesh->getVertex(c).coords[0],
+			mesh->getVertex(c).coords[1],
+			mesh->getVertex(c).coords[2]);
 
 	SoDrawStyle* sty = new SoDrawStyle;
 	sty->lineWidth = 1.0f;
@@ -219,8 +219,8 @@ void Painter::getShapeSepByEdges(Mesh* mesh, MaterialSetting* materialSetting, S
 	SoIndexedLineSet* ilsSet = new SoIndexedLineSet;
 	for (int c = 0; c < mesh->getNumOfEdges(); c++)
 	{
-		ilsSet->coordIndex.set1Value(c * 2, mesh->getEdge(c)->endVerts[0]);
-		ilsSet->coordIndex.set1Value(c * 2 + 1, mesh->getEdge(c)->endVerts[1]);
+		ilsSet->coordIndex.set1Value(c * 2, mesh->getEdge(c).endVerts[0]);
+		ilsSet->coordIndex.set1Value(c * 2 + 1, mesh->getEdge(c).endVerts[1]);
 		ilsSet->coordIndex.set1Value(2, -1);
 	}
 
@@ -243,12 +243,12 @@ void Painter::drawTriangulation(Mesh* mesh, SoSeparator* res) {
 	SoCoordinate3* co = new SoCoordinate3;
 	for (int se = 0; se < mesh->getNumOfEdges(); se++)
 	{
-		co->point.set1Value(2 * se, mesh->getVertex(mesh->getEdge(se)->endVerts[0])->coords[0],
-									mesh->getVertex(mesh->getEdge(se)->endVerts[0])->coords[1], 
-									mesh->getVertex(mesh->getEdge(se)->endVerts[0])->coords[2]);
-		co->point.set1Value(2 * se + 1, mesh->getVertex(mesh->getEdge(se)->endVerts[1])->coords[0],
-										mesh->getVertex(mesh->getEdge(se)->endVerts[1])->coords[1], 
-										mesh->getVertex(mesh->getEdge(se)->endVerts[1])->coords[2]);
+		co->point.set1Value(2 * se, mesh->getVertex(mesh->getEdge(se).endVerts[0]).coords[0],
+									mesh->getVertex(mesh->getEdge(se).endVerts[0]).coords[1], 
+									mesh->getVertex(mesh->getEdge(se).endVerts[0]).coords[2]);
+		co->point.set1Value(2 * se + 1, mesh->getVertex(mesh->getEdge(se).endVerts[1]).coords[0],
+										mesh->getVertex(mesh->getEdge(se).endVerts[1]).coords[1], 
+										mesh->getVertex(mesh->getEdge(se).endVerts[1]).coords[2]);
 	}
 
 	for (int ci = 0; ci < mesh->getNumOfEdges(); ci++)
@@ -278,9 +278,9 @@ void Painter::drawSingleTriangle(Mesh* mesh, Triangle* triangle, SoSeparator* re
 	SoCoordinate3* co = new SoCoordinate3;
 
 	for (int se = 0; se < 3; se++) {
-		Edge* edge = mesh->getEdge(triangle->edgeList[se]);
-		SbVec3f end1 = (float*)mesh->getVertex(edge->endVerts[0])->coords;
-		SbVec3f end2 = (float*)mesh->getVertex(edge->endVerts[1])->coords;
+		Edge edge = mesh->getEdge(triangle->edgeList[se]);
+		SbVec3f end1 = (float*)mesh->getVertex(edge.endVerts[0]).coords;
+		SbVec3f end2 = (float*)mesh->getVertex(edge.endVerts[1]).coords;
 		co->point.set1Value(2 * se, end1);
 		co->point.set1Value(2 * se + 1, end2);
 
@@ -297,7 +297,7 @@ void Painter::drawSingleTriangle(Mesh* mesh, Triangle* triangle, SoSeparator* re
 
 void Painter::drawNormal(Mesh* mesh, int triangle_id, SoSeparator* res) {
 
-	Triangle* triangle = mesh->getTriangle(triangle_id);
+	Triangle triangle = mesh->getTriangle(triangle_id);
 	SoMaterial* mat = new SoMaterial();
 	mat->diffuseColor.setValue(0.5, 0.5, 0.5);
 	mat->transparency = 0;
@@ -306,16 +306,16 @@ void Painter::drawNormal(Mesh* mesh, int triangle_id, SoSeparator* res) {
 	// compute centerx3
 	double centerx3[3] = { 0, 0, 0 };
 	for (int i = 0; i < 3; i++) {
-		int vertex_id = triangle->corners[i];
+		int vertex_id = triangle.corners[i];
 		for (int j = 0; j < 3; j++)
-			centerx3[j] += mesh->getVertex(vertex_id)->coords[j];
+			centerx3[j] += mesh->getVertex(vertex_id).coords[j];
 	}
 
 	// compute center and the other end of the normal
 	SoCoordinate3* coords = new SoCoordinate3();
 	coords->point.set1Value(0, centerx3[0] / 3, centerx3[1] / 3, centerx3[2] / 3);
-	coords->point.set1Value(1, centerx3[0] / 3 + (triangle->normal[0] / 100),
-		centerx3[1] / 3 + (triangle->normal[1] / 100), centerx3[2] / 3 + (triangle->normal[2] / 100));
+	coords->point.set1Value(1, centerx3[0] / 3 + (triangle.normal[0] / 100),
+		centerx3[1] / 3 + (triangle.normal[1] / 100), centerx3[2] / 3 + (triangle.normal[2] / 100));
 
 	// Draw normal
 	SoDrawStyle* sty = new SoDrawStyle;

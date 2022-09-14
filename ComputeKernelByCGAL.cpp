@@ -8,9 +8,9 @@
 #include "ComputeKernelByCGAL.h"
 #include "CGALUtils.h"
 
-Mesh* computeKernelByCGAL(Mesh* hostMeshptr, double* kernelPoint) {
+Mesh* computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint) {
 
-    vector<double*> halfSpaceCoeffs = computeHalfSpaceCoeffsFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts());
+    vector<double*> halfSpaceCoeffs = computeHalfSpaceCoeffsFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts());
 
     std::list<CGALPlane> planes;
     for (int i = 0; i < halfSpaceCoeffs.size(); i++) {

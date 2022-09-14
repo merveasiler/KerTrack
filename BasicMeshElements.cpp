@@ -2,23 +2,26 @@
 
 #include "BasicMeshElements.h"
 
-void Vertex::setNormal(double x, double y, double z) {
-	normal[0] = x;
-	normal[1] = y;
-	normal[2] = z;
-};
+Vertex::Vertex(int i, double* c) {
+	idx = i;
+	for (int k = 0; k < 3; k++)
+		coords[k] = c[k];
+}
 
 Vertex::~Vertex() {
-	delete[] coords;
-	delete[] normal;
 	vertList.clear();
 	triList.clear();
 	edgeList.clear();
 };
 
 
+Edge::Edge(int i, int* c) {
+	idx = i;
+	for (int k = 0; k < 2; k++)
+		endVerts[k] = c[k];
+}
+
 Edge::~Edge() {
-	delete[] endVerts;
 	triList.clear();
 };
 
@@ -29,49 +32,31 @@ void Edge::computeLength(Vertex* v1, Vertex* v2) {
 };
 
 
+Triangle::Triangle(int i, int* c) {
+	idx = i;
+	for (int k = 0; k < 3; k++)
+		corners[k] = c[k];
+}
+
 Triangle::Triangle(const Triangle& t) {
 	this->idx = t.idx;
-	this->corners = t.corners;		// shallow copy
+	for (int k = 0; k < 3; k++)
+		this->corners[k] = t.corners[k];
 	for (int i = 0; i < t.edgeList.size(); i++)
 		this->edgeList.push_back(t.edgeList[i]);
 	for (int i = 0; i < t.triList.size(); i++)
 		this->triList.push_back(t.triList[i]);
-	if (t.normal != NULL)
-		this->normal = t.normal;	// shallow copy
+	for (int k = 0; k < 3; k++)
+		this->normal[k] = t.normal[k];
 }
 
 Triangle::~Triangle() {
-	delete[] corners;
-	if (center != NULL)
-		delete[] center;
-	if (normal != NULL)
-		delete[] normal;
-	if (areaVect != NULL)
-		delete[] areaVect;
 	edgeList.clear();
 	triList.clear();
 	angleList.clear();
 };
 
-void Triangle::computeCenter(Vertex* v1, Vertex* v2, Vertex* v3) {
-	center = new double[3];
-	for (int i = 0; i < 3; i++)
-		center[i] = (v1->coords[i] + v2->coords[i] + v3->coords[i]) / 3;
-}
-
 void Triangle::computeNormal(Vertex* v1, Vertex* v2, Vertex* v3) {
-
-	double edgeVect1[3], edgeVect2[3];
-	for (int i = 0; i < 3; i++) {
-		edgeVect1[i] = v2->coords[i] - v1->coords[i];
-		edgeVect2[i] = v3->coords[i] - v2->coords[i];
-	}
-
-	normal = crossProduct(edgeVect1, edgeVect2);
-	normalize(normal);
-}
-
-void Triangle::computeNormal(Vertex* v1, Vertex* v2, Vertex* v3, double* normal) {
 
 	double edgeVect1[3], edgeVect2[3];
 	for (int i = 0; i < 3; i++) {
@@ -83,7 +68,14 @@ void Triangle::computeNormal(Vertex* v1, Vertex* v2, Vertex* v3, double* normal)
 	normalize(normal);
 }
 
-void Triangle::computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3) {
+double* Triangle::computeCenter(Vertex* v1, Vertex* v2, Vertex* v3) {
+	double* center = new double[3];
+	for (int i = 0; i < 3; i++)
+		center[i] = (v1->coords[i] + v2->coords[i] + v3->coords[i]) / 3;
+	return center;
+}
+
+double* Triangle::computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3) {
 
 	double vect1[3], vect2[3];
 	for (int i = 0; i < 3; i++)
@@ -100,7 +92,7 @@ void Triangle::computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3) {
 	}
 
 	// cross product
-	areaVect = new double[3];
+	double* areaVect = new double[3];
 	areaVect[0] = vect1[1] * vect2[2] - vect1[2] * vect2[1];
 	areaVect[1] = vect1[2] * vect2[0] - vect1[0] * vect2[2];
 	areaVect[2] = vect1[0] * vect2[1] - vect1[1] * vect2[0];
@@ -109,6 +101,8 @@ void Triangle::computeAreaVector(Vertex* v1, Vertex* v2, Vertex* v3) {
 	double length = sqrt(pow(areaVect[0], 2) + pow(areaVect[1], 2) + pow(areaVect[2], 2));
 	for (int i = 0; i < 3; i++)
 		areaVect[i] = areaVect[i] / length;
+	
+	return areaVect;
 }
 
 void Triangle::setAngSkewness(double angSkewness) {
@@ -130,8 +124,6 @@ double Triangle::getSquish() {
 TriangleWithVerts::~TriangleWithVerts() {
 	for (int i = 0; i < 3; i++)
 		vertices[i] = NULL;
-	this->corners = NULL;
-	this->normal = NULL;
 	this->edgeList.clear();
 	this->triList.clear();
 };

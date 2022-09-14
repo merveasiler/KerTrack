@@ -28,11 +28,11 @@
 void doExperimentForPaper(string meshName) {
 
 	/************************************************ READ MESH ************************************************/
-	Mesh* mesh = new Mesh();
+	Mesh mesh;
 	if (meshName.substr(meshName.length() - 3, 3) == "off")
-		mesh->loadOff(meshName.c_str());
+		mesh.loadOff(meshName.c_str());
 	else
-		mesh->loadObj(meshName.c_str());
+		mesh.loadObj(meshName.c_str());
 
 	/*************************************** INGREDIENTS / PREPARATIONS  ***************************************/
 		// ... for kernel computation
@@ -61,7 +61,7 @@ void doExperimentForPaper(string meshName) {
 		// ... CGAL
 	Mesh* groundTruth = kernels[0] = ComputeKernelByCGAL(mesh, extremeDirection);
 	positions.push_back(new double[3]{objectWidth[0] + breakWidth[0], 0, 0 });	// on the corner scene
-	outputs.push_back(make_tuple(make_tuple(kernels[0], kernelMatSetting), make_tuple(mesh, meshMatSetting)));
+	outputs.push_back(make_tuple(make_tuple(kernels[0], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 	cout << endl;
 
 		// ... KERTRACK
@@ -70,7 +70,7 @@ void doExperimentForPaper(string meshName) {
 		double* position = new double[3]{ 0, 0, 0 };	// on the lower row
 		position[0] = i * (objectWidth[0] + breakWidth[0]);
 		positions.push_back(position);
-		outputs.push_back(make_tuple(make_tuple(kernels[j], kernelMatSetting), make_tuple(mesh, meshMatSetting)));
+		outputs.push_back(make_tuple(make_tuple(kernels[j], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 		cout << endl;
 	}
 
@@ -80,7 +80,7 @@ void doExperimentForPaper(string meshName) {
 		double* position = new double[3]{ 0, objectWidth[1] + breakWidth[1], 0 };	// on the upper row
 		position[0] = j * (objectWidth[0] + breakWidth[0]);
 		positions.push_back(position);
-		outputs.push_back(make_tuple(make_tuple(kernels[i], kernelMatSetting), make_tuple(mesh, meshMatSetting)));
+		outputs.push_back(make_tuple(make_tuple(kernels[i], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 		cout << endl;
 	}
 
@@ -124,18 +124,17 @@ void doExperimentForPaper(string meshName) {
 	}
 	delete kernelMatSetting;
 	delete meshMatSetting;
-	delete mesh;
 
 }
 
 void ComputeKernel(string meshName, string algoType) {
 
 	// Read mesh
-	Mesh* mesh = new Mesh();
+	Mesh mesh;
 	if (meshName.substr(meshName.length() - 3, 3) == "off")
-		mesh->loadOff(meshName.c_str());
+		mesh.loadOff(meshName.c_str());
 	else
-		mesh->loadObj(meshName.c_str());
+		mesh.loadObj(meshName.c_str());
 
 	// Ingredients:
 	double extremeDirection[3] = { 0, -1, 0 };
@@ -163,11 +162,10 @@ void ComputeKernel(string meshName, string algoType) {
 	if (kernel) {
 		MaterialSetting* kernelMatSetting = new MaterialSetting(0, 0, 1, 0);
 		MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0.5);
-		vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(kernel, kernelMatSetting), make_tuple(mesh, meshMatSetting) };
+		vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(kernel, kernelMatSetting), make_tuple(&mesh, meshMatSetting) };
 		drawMultipleMeshToScene(mesh_mat_set);
 		delete kernel;
 	}
-	delete mesh;
 
 }
 
@@ -363,51 +361,46 @@ Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio) {
 }
 */
 
-Mesh* ComputeKernelByKerTrack(Mesh* mesh) {
+Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
 	for (int i = 0; i < executionCount; i++) {
 		clock_t begin = clock();
-		KernelExpansion_KerTrack kertrack(*mesh);
+		KernelExpansion_KerTrack kertrack(mesh);
 		kertrack.expandKernel();
-		Mesh* kernel = NULL, *incompleteKernel = kertrack.getKernel();
-		if (incompleteKernel)
-			kernel = computeConvexHull(incompleteKernel->getAllVerts());
+		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
+		if (incompleteKernel.getNumOfVerts() > 0) {
+			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
+			delete kernel;
+		}
 		clock_t end = clock();
 		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-		
-		if (incompleteKernel) {
-			delete kernel;
-			delete incompleteKernel;
-		}
 	}
 	
 	// Execute to see the results
-	KernelExpansion* kernelExpansion = new KernelExpansion_KerTrack(*mesh);
-	kernelExpansion->expandKernel();
-	Mesh* kernel, *incompleteKernel = kernelExpansion->getKernel();
-	if (incompleteKernel) {
-		kernel = computeConvexHull(incompleteKernel->getAllVerts());
-		cout << "Number of found kernel vertices: " << incompleteKernel->getNumOfVerts() << "." << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
+	KernelExpansion_KerTrack kertrack(mesh);
+	kertrack.expandKernel();
+	Mesh* kernel, &incompleteKernel = kertrack.getKernel();
+	if (incompleteKernel.getNumOfVerts() > 0) {
+		kernel = computeConvexHull(incompleteKernel.getAllVerts());
+		cout << "Number of found kernel vertices: " << incompleteKernel.getNumOfVerts() << "." << endl;
+		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
 		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-		delete incompleteKernel;
 	}
 	else {
 		kernel = NULL;
 		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
+		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
 	}		
 
 	// Print the average time
 	double elapsed_secs = totalTime / executionCount;
 	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by KerTrack." << endl;
-	delete kernelExpansion;
 	return kernel;
 }
 
-Mesh* ComputeKernelByCGAL(Mesh* mesh, double* extremeDirection) {
+Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {
 
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
@@ -431,14 +424,14 @@ Mesh* ComputeKernelByCGAL(Mesh* mesh, double* extremeDirection) {
 	Mesh* kernel;
 	if (kernelPoint) {
 		kernel = computeKernelByCGAL(mesh, kernelPoint);
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
+		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
 		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
 		delete[] kernelPoint;
 	}
 	else {
 		kernel = NULL;
 		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
+		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
 	}
 
 	// Print the average time
@@ -457,7 +450,7 @@ void FindKernelPoint_SDLP(string meshName) {
 
 	double extremeDirection[3] = { 0, 0, 1 };
 
-	double* kernel_point = sdlpMain(mesh, extremeDirection);
+	double* kernel_point = sdlpMain(*mesh, extremeDirection);
 	if (kernel_point != NULL) {
 		cout << "Final kernel point: " << kernel_point[0] << " " << kernel_point[1] << " " << kernel_point[2] << endl;
 		delete[] kernel_point;
@@ -475,20 +468,20 @@ void SphericalParametrize(string meshName) {
 
 	double extremeDirection[3] = { 0, 0, 1 };
 
-	double* kernelPoint = sdlpMain(mesh, extremeDirection);
+	double* kernelPoint = sdlpMain(*mesh, extremeDirection);
 	double* center = kernelPoint;
 	float radius = 1.0;
 
 	// project mesh vertices onto the sphere
 	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-		Vertex* v = mesh->getVertex(i);
+		Vertex v = mesh->getVertex(i);
 		double rayDirection[3];
 		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v->coords[j] - center[j];
+			rayDirection[j] = v.coords[j] - center[j];
 		normalize(rayDirection);
 		// new coordinates:
 		for (int j = 0; j < 3; j++)
-			v->coords[j] = center[j] + rayDirection[j] * radius;
+			v.coords[j] = center[j] + rayDirection[j] * radius;
 	}
 
 	drawSphereOnMesh(mesh, center, radius);
@@ -504,13 +497,13 @@ vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh) {
 
 	for (int i = 0; i < ground_truth->getNumOfVerts(); i++) {
 
-		Vertex* v1 = ground_truth->getVertex(i);		
+		Vertex v1 = ground_truth->getVertex(i);		
 		double minDistance = numeric_limits<double>::infinity();
 
 		for (int j = 0; j < exp_mesh->getNumOfVerts(); j++) {
 	
-			Vertex* v2 = exp_mesh->getVertex(j);
-			double* diff = diffVects(v1->coords, v2->coords);
+			Vertex v2 = exp_mesh->getVertex(j);
+			double* diff = diffVects(v1.coords, v2.coords);
 			double distance = computeLength(diff);
 			delete[] diff;
 

@@ -14,9 +14,9 @@ int main(int argc, char* argv[])
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/liver.obj"; // argv[2];
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/plus.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/203289.off";
-		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/spiral/spiral5.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/spiral/spiral5.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/teddy.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
+		string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
 
 		// DRAW:
 		// Example:	draw C:/Users/Merve/3D_DATABASES/DB_Kids/method_alexa/11to15at0.5.off

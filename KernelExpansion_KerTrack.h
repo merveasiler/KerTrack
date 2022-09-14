@@ -13,14 +13,12 @@ enum class ProcessColor {
 struct EdgePartnerTriple {
 
 	int partnerId;
-	double* edgeDirection;
-	double* startPoint;
+	double edgeDirection[3];
+	double startPoint[3];
 	int startPointId;
 
 	EdgePartnerTriple(int partnerId, double* edgeDirection, double* startPoint, int startPointId) {
 		this->partnerId = partnerId;
-		this->edgeDirection = new double[3];
-		this->startPoint = new double[3];
 		for (int i = 0; i < 3; i++) {
 			this->edgeDirection[i] = edgeDirection[i];
 			this->startPoint[i] = startPoint[i];
@@ -29,15 +27,13 @@ struct EdgePartnerTriple {
 	};
 
 	~EdgePartnerTriple() {
-		delete[] this->edgeDirection;
-		delete[] this->startPoint;
 	}
 
 };
 
 class KernelExpansion_KerTrack : public KernelExpansion {
 
-	vector<queue<EdgePartnerTriple*>> edgePartners;	// "id" of the other plane to construct and edge line with this & "direction" to walk on the line
+	vector<queue<EdgePartnerTriple>> edgePartners;	// "id" of the other plane to construct and edge line with this & "direction" to walk on the line
 	vector<vector<int>> edgePartnerIds;
 	vector<vector<int>> vertexParentIds;
 	vector<ProcessColor> isKernelFace;

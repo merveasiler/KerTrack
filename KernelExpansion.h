@@ -20,7 +20,7 @@ struct Grid {
 
 	Grid() {};
 	Grid(double leastCoordinates[3], double mostCoordinates[3]);
-	Grid(Mesh* hostMeshPtr);
+	Grid(Mesh& hostMesh);
 	void constructGridByCellSize(double cellSize);
 	void constructGridByDiagonalRatio(double ratio);
 	void constructGridByNumOfCells(int gridDimension[3]);
@@ -38,7 +38,7 @@ protected:
 	double* initialPoint = nullptr;
 	double* extremeCorners[2] = { nullptr, nullptr };
 	const Mesh* hostMeshptr;
-	Mesh* kernel;
+	Mesh kernel;
 
 	Grid grid;
 
@@ -60,7 +60,7 @@ public:
 	KernelExpansion(const Mesh& hostMesh, int gridDimension[3]);
 	KernelExpansion(const Mesh& hostMesh);
 	~KernelExpansion();
-	Mesh* getKernel();
+	Mesh& getKernel();
 	double* getInitialKernelPoint();
 	vector<HalfSpace>& getHalfSpaceSet();
 	Grid getGrid();

@@ -39,7 +39,7 @@ void Mesh::loadObj(const char* name)
 				}
 
 				// single triangle
-				else 
+				else
 					addTriangle(cornerIdSet[0] - 1, cornerIdSet[1] - 1, cornerIdSet[2] - 1);
 
 				cornerInfoSet.clear();
@@ -90,31 +90,28 @@ void Mesh::loadOff(const char* name) {
 void Mesh::addVertex(double x, double y, double z)
 {
 	int idx = verts.size();
-	double* c = new double[3];
+	double c[3];
 	c[0] = x;
 	c[1] = y;
 	c[2] = z;
 
-	verts.push_back(new Vertex(idx, c));
+	verts.push_back(Vertex(idx, c));
 }
 
 void Mesh::addTriangle(int v1, int v2, int v3)
 {
 	int idx = tris.size();
-	int* c = new int[3];
+	int c[3];
 	c[0] = v1;
 	c[1] = v2;
 	c[2] = v3;
 
-	tris.push_back(new Triangle(idx, c));
-	tris[idx]->center = NULL;	//tris[idx]->computeCenter(verts[v1], verts[v2], verts[v3]);		// to be used in squish metric 
-	tris[idx]->areaVect = NULL;	//tris[idx]->computeAreaVector(verts[v1], verts[v2], verts[v3]);	// to be used in squish metric
-	tris[idx]->normal = NULL;
+	tris.push_back(Triangle(idx, c)); 
 
 	//set up structure
-	verts[v1]->triList.push_back(idx);
-	verts[v2]->triList.push_back(idx);
-	verts[v3]->triList.push_back(idx);
+	verts[v1].triList.push_back(idx);
+	verts[v2].triList.push_back(idx);
+	verts[v3].triList.push_back(idx);
 
 	for (int i = 0; i<3; i++) {
 		int corner1 = c[i];
@@ -125,64 +122,53 @@ void Mesh::addTriangle(int v1, int v2, int v3)
 			addEdge(corner1, corner2);
 		}
 		else {	// construct adjacent triangle relationship
-			for (int j = 0; j < edges[edge_id]->triList.size(); j++) {
-				Triangle* adjTriangle = tris[edges[edge_id]->triList[j]];
-				adjTriangle->triList.push_back(idx);
-				tris[idx]->triList.push_back(adjTriangle->idx);
+			for (int j = 0; j < edges[edge_id].triList.size(); j++) {
+				Triangle& adjTriangle = tris[edges[edge_id].triList[j]];
+				
+				adjTriangle.triList.push_back(idx);
+				tris[idx].triList.push_back(adjTriangle.idx);
 			}
 		}
 
-		tris[idx]->edgeList.push_back(edge_id);
-		edges[edge_id]->triList.push_back(idx);
+		tris[idx].edgeList.push_back(edge_id);
+		edges[edge_id].triList.push_back(idx);
 	}
 
-	tris[idx]->computeNormal(verts[v1], verts[v2], verts[v3]);
+	tris[idx].computeNormal(&verts[v1], &verts[v2], &verts[v3]);
 }
 
 void Mesh::addEdge(int v1, int v2)
 {
 	int idx = edges.size();
-	int* c = new int[2];
+	int c[2];
 	c[0] = v1;
 	c[1] = v2;
+	Edge edge(idx, c);
+	edges.push_back(edge);
+	
+	verts[v1].edgeList.push_back(idx);
+	verts[v2].edgeList.push_back(idx);
 
-	edges.push_back(new Edge(idx, c));
-	edges[idx]->computeLength(verts[v1], verts[v2]);
-
-	verts[v1]->edgeList.push_back(idx);
-	verts[v2]->edgeList.push_back(idx);
 }
 
 int Mesh::makeVertsNeighbor(int v1i, int v2i)
 {
-	for (unsigned int i = 0; i < verts[v1i]->edgeList.size(); i++) {
-		Edge* e = edges[verts[v1i]->edgeList[i]];
+	for (unsigned int i = 0; i < verts[v1i].edgeList.size(); i++) {
+		Edge& e = edges[verts[v1i].edgeList[i]];
 		for (int j = 0; j < 2; j++)
-			if (e->endVerts[j] == v2i)
-				return e->idx;
+			if (e.endVerts[j] == v2i)
+				return e.idx;
 	}
 
-	verts[v1i]->vertList.push_back(v2i);
-	verts[v2i]->vertList.push_back(v1i);
+	verts[v1i].vertList.push_back(v2i);
+	verts[v2i].vertList.push_back(v1i);
 	return -1;
 }
 
 Mesh::~Mesh()
 {
-	for (unsigned int i = 0; i<verts.size(); i++)
-		delete verts[i];
 	verts.clear();
-
-	for (unsigned int i = 0; i<tris.size(); i++)
-		delete tris[i];
 	tris.clear();
-
-	for (unsigned int i = 0; i<edges.size(); i++)
-		delete edges[i];
 	edges.clear();
-
-	for (unsigned int i = 0; i<tets.size(); i++)
-		delete tets[i];
-	tets.clear();
 }
 

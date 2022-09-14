@@ -56,14 +56,14 @@ CGALMesh convertMeshToCGALMesh(Mesh* mesh) {
 
     // Add the points as vertices
     for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-        Vertex* v = mesh->getVertex(i);
-        vi.push_back(surface_mesh.add_vertex(CGALPoint(v->coords[0], v->coords[1], v->coords[2])));
+        Vertex v = mesh->getVertex(i);
+        vi.push_back(surface_mesh.add_vertex(CGALPoint(v.coords[0], v.coords[1], v.coords[2])));
     }
 
     // Add the triangles as faces
     for (int i = 0; i < mesh->getNumOfTris(); i++) {
-        Triangle* t = mesh->getTriangle(i);
-        CGALMesh::Face_index fi = surface_mesh.add_face(vi[t->corners[0]], vi[t->corners[1]], vi[t->corners[2]]);
+        Triangle t = mesh->getTriangle(i);
+        CGALMesh::Face_index fi = surface_mesh.add_face(vi[t.corners[0]], vi[t.corners[1]], vi[t.corners[2]]);
     }
 
     vi.clear();
@@ -78,14 +78,14 @@ CGALMesh convertMeshToCGALGraphMesh(Mesh* mesh) {
 
     // Add the points as vertices
     for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-        Vertex* v = mesh->getVertex(i);
-        points.push_back(CGALPoint(v->coords[0], v->coords[1], v->coords[2]));
+        Vertex v = mesh->getVertex(i);
+        points.push_back(CGALPoint(v.coords[0], v.coords[1], v.coords[2]));
     }
 
     // Add the triangles as faces
     for (int i = 0; i < mesh->getNumOfTris(); i++) {
-        Triangle* t = mesh->getTriangle(i);
-        CGAL::make_triangle(points[t->corners[0]], points[t->corners[1]], points[t->corners[2]], surface_mesh);
+        Triangle t = mesh->getTriangle(i);
+        CGAL::make_triangle(points[t.corners[0]], points[t.corners[1]], points[t.corners[2]], surface_mesh);
     }
     
     points.clear();
@@ -106,13 +106,13 @@ double* computeHausdorffDistance(Mesh* mesh1, Mesh* mesh2) {
 
 }
 
-Mesh* computeConvexHull(const vector<Vertex*>& vertices) {
+Mesh* computeConvexHull(const vector<Vertex>& vertices) {
 
     // convert vertices to CGALPoint array
     std::vector<CGALPoint> points;
     for (int i = 0; i < vertices.size(); i++) {
-        Vertex* v = vertices[i];
-        CGALPoint p(v->coords[0], v->coords[1], v->coords[2]);
+        Vertex v = vertices[i];
+        CGALPoint p(v.coords[0], v.coords[1], v.coords[2]);
         points.push_back(p);
     }
 

@@ -802,5 +802,5 @@ struct HalfSpace;
 double* sdlpMain(double extremeDirection[3], HalfSpace** halfSpaceSet, int numOfHalfSpaces);
 
 class Mesh;
-double* sdlpMain(Mesh* hostMeshptr, double extremeDirection[3]);
+double* sdlpMain(Mesh& hostMesh, double extremeDirection[3]);
 

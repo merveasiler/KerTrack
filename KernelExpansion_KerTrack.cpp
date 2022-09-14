@@ -14,7 +14,7 @@ void KernelExpansion_KerTrack::expandKernel() {
 	//cout << "Number of bounding planes: " << halfSpaceSet.size() << " out of " << hostMeshptr->getNumOfTris() << " triangles." << endl;
 
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
-		edgePartners.push_back(queue<EdgePartnerTriple*>());
+		edgePartners.push_back(queue<EdgePartnerTriple>());
 		isKernelFace.push_back(ProcessColor::RED);
 		edgePartnerIds.push_back(vector<int>());
 	}
@@ -24,10 +24,8 @@ void KernelExpansion_KerTrack::expandKernel() {
 	findInitialPoint_3(point);
 	clock_t end = clock();
 	cout << "Point finding time: " << double(end - begin) / CLOCKS_PER_SEC << endl;
-	if (point[0] == numeric_limits<double>::infinity()) {
-		kernel = NULL;
+	if (point[0] == numeric_limits<double>::infinity())
 		return;	// NOT STAR-SHAPED!
-	}
 
 	double* newpoint1, *newpoint2;
 	int theClosestId1, theClosestId2;
@@ -42,27 +40,26 @@ void KernelExpansion_KerTrack::expandKernel() {
 			if (isKernelFace[i] == ProcessColor::WHITE) {
 				while(!edgePartners[i].empty()) {
 					// initializations
-					EdgePartnerTriple* ept = edgePartners[i].front();
-					int partnerId = ept->partnerId;
-					double* edgeDirection = ept->edgeDirection;
-					double* startPoint = ept->startPoint;
-					int startPointId = ept->startPointId;
+					EdgePartnerTriple& ept = edgePartners[i].front();
+					int partnerId = ept.partnerId;
+					double edgeDirection[3] = { ept.edgeDirection[0], ept.edgeDirection[1], ept.edgeDirection[2] };
+					double startPoint[3] = { ept.startPoint[0], ept.startPoint[1], ept.startPoint[2] };
+					int startPointId = ept.startPointId;
 					edgePartners[i].pop();
 
 					// find the corner on the given edge
 					vector<int> theClosestIds;
 					double* kernelVertex;
-					int previousNumOfVerts = kernel->getNumOfVerts();
+					int previousNumOfVerts = kernel.getNumOfVerts();
 					tie(theClosestIds, kernelVertex) = findTheClosestHalfSpace(startPointId, edgeDirection, i, partnerId);	
 
-					if (kernel->getNumOfVerts() > previousNumOfVerts || isTripleSame(kernelVertex, startPoint))
+					if (kernel.getNumOfVerts() > previousNumOfVerts || isTripleSame(kernelVertex, startPoint))
 						orderTheFaces(i, partnerId, theClosestIds, kernelVertex, edgeDirection);
 					
 					//if (startPointId >= 0)
 					//	kernel->addEdge(startPointId, kernel->getNumOfVerts() - 1);
 
 					delete[] kernelVertex;
-					delete ept;
 				}
 				any_white_left = true;
 				isKernelFace[i] = ProcessColor::GREEN;
@@ -149,7 +146,7 @@ tuple<int, double*> KernelExpansion_KerTrack::findTheClosestHalfSpace(double poi
 		newpoint[i] = point[i] + theClosestDirection[i] * theClosestDistance;
 	delete[] theClosestDirection;
 
-	edgePartners[id].push(new EdgePartnerTriple(theClosestId, intersectionLineDirection, newpoint, 0));
+	edgePartners[id].push(EdgePartnerTriple(theClosestId, intersectionLineDirection, newpoint, 0));
 	edgePartnerIds[id].push_back(theClosestId);
 	edgePartnerIds[theClosestId].push_back(id);
 	isKernelFace[id] = ProcessColor::WHITE;
@@ -159,7 +156,7 @@ tuple<int, double*> KernelExpansion_KerTrack::findTheClosestHalfSpace(double poi
 	parentIdsForNewVertex.push_back(id);
 	parentIdsForNewVertex.push_back(theClosestId);
 	vertexParentIds.push_back(parentIdsForNewVertex);
-	kernel->addVertex(newpoint[0], newpoint[1], newpoint[2]);
+	kernel.addVertex(newpoint[0], newpoint[1], newpoint[2]);
 
 	delete[] intersectionLineDirection;
 	return make_tuple(theClosestId, newpoint);
@@ -169,7 +166,7 @@ tuple<vector<int>, double*> KernelExpansion_KerTrack::findTheClosestHalfSpace(in
 
 	double theClosestDistance = numeric_limits<double>::infinity();
 	vector<int> theClosestIds;
-	Line line(kernel->getVertex(vertexId)->coords, lineDirection);
+	Line line(kernel.getVertex(vertexId).coords, lineDirection);
 	
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
 		bool previous_parent = false;
@@ -192,23 +189,23 @@ tuple<vector<int>, double*> KernelExpansion_KerTrack::findTheClosestHalfSpace(in
 
 	double* newpoint = new double[3];
 	for (int i = 0; i < 3; i++)
-		newpoint[i] = kernel->getVertex(vertexId)->coords[i] + lineDirection[i] * theClosestDistance;
+		newpoint[i] = kernel.getVertex(vertexId).coords[i] + lineDirection[i] * theClosestDistance;
 
 	if (theClosestDistance > 0) {
 		bool previousVertex = false;
-		for (int v = 0; v < kernel->getNumOfVerts(); v++)
-			if (isTripleSame(kernel->getVertex(v)->coords, newpoint)) {
+		for (int v = 0; v < kernel.getNumOfVerts(); v++)
+			if (isTripleSame(kernel.getVertex(v).coords, newpoint)) {
 				previousVertex = true;
 				vertexId = v;
 				break;
 			}
 		if (!previousVertex) {
-			kernel->addVertex(newpoint[0], newpoint[1], newpoint[2]);
+			kernel.addVertex(newpoint[0], newpoint[1], newpoint[2]);
 			vector<int> parentIdsForNewVertex;
 			parentIdsForNewVertex.push_back(lineParent1Id);
 			parentIdsForNewVertex.push_back(lineParent2Id);
 			vertexParentIds.push_back(parentIdsForNewVertex);
-			vertexId = kernel->getNumOfVerts() - 1;
+			vertexId = kernel.getNumOfVerts() - 1;
 		}
 	}
 
@@ -266,7 +263,7 @@ void KernelExpansion_KerTrack::orderTheFaces(int base_id, int partner_id, vector
 	}
 
 	if (shouldSaveEdge(base_id, next_partner_ids[0]))
-		edgePartners[base_id].push(new EdgePartnerTriple(next_partner_ids[0], edgeDirections[0], startPoint, kernel->getNumOfVerts() - 1));
+		edgePartners[base_id].push(EdgePartnerTriple(next_partner_ids[0], edgeDirections[0], startPoint, kernel.getNumOfVerts() - 1));
 	
 	next_partner_ids.push_back(partner_id);
 	for (int i = 0, j = 1; j < next_partner_ids.size(); j++) {
@@ -310,7 +307,7 @@ void KernelExpansion_KerTrack::saveFoundEdgeToProcess(int base_id, int partner_i
 	if (dotProduct(edgeDirection, directioner) > 0)
 		nextEdgeDirection = multVect(edgeDirection, -1);
 
-	edgePartners[base_id].push(new EdgePartnerTriple(partner_id, nextEdgeDirection, startPoint, kernel->getNumOfVerts() - 1));
+	edgePartners[base_id].push(EdgePartnerTriple(partner_id, nextEdgeDirection, startPoint, kernel.getNumOfVerts() - 1));
 	delete[] nextEdgeDirection;
 	delete[] edgeDirection;
 
@@ -333,8 +330,8 @@ double* KernelExpansion_KerTrack::findInitialPoint_1() {
 
 double* KernelExpansion_KerTrack::findInitialPoint_2() {
 
-	Vertex* v = hostMeshptr->getVertex(0);
-	double* point = new double[3]{ v->coords[0], v->coords[1], v->coords[2] };
+	Vertex v = hostMeshptr->getVertex(0);
+	double* point = new double[3]{ v.coords[0], v.coords[1], v.coords[2] };
 	vector<int> satisfied_face_ids;
 
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
@@ -383,9 +380,9 @@ double* KernelExpansion_KerTrack::findInitialPoint_2() {
 
 void KernelExpansion_KerTrack::findInitialPoint_3(double* point) {
 
-	Vertex* v = hostMeshptr->getVertex(0);
+	Vertex v = hostMeshptr->getVertex(0);
 	for (int k = 0; k < 3; k++)
-		point[k] = v->coords[k];
+		point[k] = v.coords[k];
 
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
 		// calculate the distance of current point to i'th plane
@@ -442,8 +439,8 @@ void KernelExpansion_KerTrack::findInitialPoint_3(double* point) {
 
 double* KernelExpansion_KerTrack::findInitialPoint_4() {
 	
-	Vertex* v = hostMeshptr->getVertex(0);
-	double* point = new double[3]{ v->coords[0], v->coords[1], v->coords[2] };
+	Vertex v = hostMeshptr->getVertex(0);
+	double* point = new double[3]{ v.coords[0], v.coords[1], v.coords[2] };
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
 		// calculate the distance of current point to i'th plane
 		double distance = halfSpaceSet[i].ABCD[3];

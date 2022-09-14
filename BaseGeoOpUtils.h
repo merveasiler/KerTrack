@@ -50,9 +50,9 @@ double findClosestValueSatisfiedByPoint(const double point[3], const vector<Half
 
 double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer);
 
-void computeHalfSpacesFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts, vector<HalfSpace>& halfSpaces);
+void computeHalfSpacesFromTriangles(const vector<Triangle>& tris, const vector<Vertex>& verts, vector<HalfSpace>& halfSpaces);
 
-vector<double*> computeHalfSpaceCoeffsFromTriangles(const vector<Triangle*>& tris, const vector<Vertex*>& verts);
+vector<double*> computeHalfSpaceCoeffsFromTriangles(const vector<Triangle>& tris, const vector<Vertex>& verts);
 
 double findAngleBetweenPlaneAndVector(const Plane* plane, const double* direction);
 

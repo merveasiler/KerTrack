@@ -38,7 +38,7 @@ struct Plane {
 	double ABCD[3];
 	double point[3];
 
-	Plane(double*, double*);
+	Plane(const double*, const double*);
 	~Plane();
 	void setId(int idx);
 };
@@ -47,6 +47,6 @@ struct HalfSpace : Plane {
 
 	bool isLargerThanZero;
 
-	HalfSpace(double*, double*, bool);
+	HalfSpace(const double*, const double*, bool);
 	~HalfSpace();
 };

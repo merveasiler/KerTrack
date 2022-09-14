@@ -43,7 +43,7 @@ HalfPlane::~HalfPlane() {
 	@param A point on the plane
 	@param The normal vector of the plane
 */
-Plane::Plane(double* point, double* normalVector) {
+Plane::Plane(const double* point, const double* normalVector) {
 
 	for (unsigned int i = 0; i < 3; i++) {
 		this->ABCD[i] = normalVector[i];
@@ -66,7 +66,7 @@ void Plane::setId(int idx) {
 
 #pragma region HALFSPACE
 
-HalfSpace::HalfSpace(double* point, double* normalVector, bool isLargerThanZero) : Plane(point, normalVector) {
+HalfSpace::HalfSpace(const double* point, const double* normalVector, bool isLargerThanZero) : Plane(point, normalVector) {
 
 	this->isLargerThanZero = isLargerThanZero;
 }

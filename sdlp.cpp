@@ -40,10 +40,10 @@ double* sdlpMain(double extremeDirection[3], HalfSpace** halfSpaceSet, int numOf
 
 }
 
-double* sdlpMain(Mesh* hostMeshptr, double extremeDirection[3]) {
+double* sdlpMain(Mesh& hostMesh, double extremeDirection[3]) {
 
     vector<HalfSpace> halfSpaceSet;
-    computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), halfSpaceSet);
+    computeHalfSpacesFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts(), halfSpaceSet);
     HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
     for (int i = 0; i < halfSpaceSet.size(); i++)
         halfSpaces[i] = &halfSpaceSet[i];

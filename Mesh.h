@@ -13,11 +13,10 @@ class Mesh
 {
 
 private:
-
-	vector< Vertex* > verts;
-	vector< Triangle* > tris;
-	vector< Edge* > edges;
-	vector< Tetrahedron* > tets;
+	
+	vector< Vertex > verts;
+	vector< Triangle > tris;
+	vector< Edge > edges;
 
 public:
 	Mesh() {};
@@ -35,25 +34,20 @@ public:
 	int getNumOfVerts() const { return verts.size(); };
 	int getNumOfTris() const { return tris.size(); };
 	int getNumOfEdges() const { return edges.size(); };
-	int getNumOfTets() { return tets.size(); };
-	Vertex* getVertex(int i) const { return verts[i]; };
-	Triangle* getTriangle(int i) const { return tris[i]; };
-	Edge* getEdge(int i) const { return edges[i]; };
-	Tetrahedron* getTetrahedron(int i) { return tets[i]; };
-	const vector<Vertex*>& getAllVerts() const { return verts; };
-	const vector<Triangle*>& getAllTris() const { return tris; };
-	const vector<Edge*>& getAllEdges() const { return edges; };
-	const vector<Tetrahedron*>& getAllTetrahedra() const { return tets; };
+	Vertex getVertex(int i) const { return verts[i]; };
+	Triangle getTriangle(int i) const { return tris[i]; };
+	Edge getEdge(int i) const { return edges[i]; };
+	const vector<Vertex>& getAllVerts() const { return verts; };
+	const vector<Triangle>& getAllTris() const { return tris; };
+	const vector<Edge>& getAllEdges() const { return edges; };
 
 	// methods to compute mesh features
 	void computeTrisAngles();
 	double computeVolume();
 	void tetrahedralizeSurface();
-	void writeSurfaceTetrahedralizedVersion(const char* name);
 	vector<double> computeCurvaturePerVertex();
 	void makeConvex();
 	void removeAbnormalTris();
-	void loadOffFromMatrices();
 };
 
 #pragma once

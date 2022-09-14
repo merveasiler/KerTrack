@@ -73,8 +73,7 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh, int gridDimension[3]) {
 KernelExpansion::KernelExpansion(const Mesh& hostMesh) {
 
 	this->hostMeshptr = &hostMesh;
-	this->kernel = new Mesh();
-	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
+	computeHalfSpacesFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts(), this->halfSpaceSet);
 
 }
 
@@ -100,7 +99,7 @@ KernelExpansion::~KernelExpansion() {
 	handledCells.clear();
 }
 
-Mesh* KernelExpansion::getKernel() {
+Mesh& KernelExpansion::getKernel() {
 	return kernel;
 }
 
@@ -239,7 +238,7 @@ Grid::Grid(double leastCoordinates[3], double mostCoordinates[3]) {
 	}
 }
 
-Grid::Grid(Mesh* hostMeshptr) {
+Grid::Grid(Mesh& hostMesh) {
 
 	for (int j = 0; j < 3; j++) {
 		this->minGridCoords[j] = numeric_limits<double>::infinity();
@@ -247,13 +246,13 @@ Grid::Grid(Mesh* hostMeshptr) {
 	}
 
 	// find the "most" and "least" coordinates of the mesh
-	for (int i = 0; i < hostMeshptr->getNumOfVerts(); i++) {
-		Vertex* vertex = hostMeshptr->getVertex(i);
+	for (int i = 0; i < hostMesh.getNumOfVerts(); i++) {
+		Vertex vertex = hostMesh.getVertex(i);
 		for (int j = 0; j < 3; j++) {
-			if (this->minGridCoords[j] > vertex->coords[j])
-				this->minGridCoords[j] = vertex->coords[j];
-			if (this->maxGridCoords[j] < vertex->coords[j])
-				this->maxGridCoords[j] = vertex->coords[j];
+			if (this->minGridCoords[j] > vertex.coords[j])
+				this->minGridCoords[j] = vertex.coords[j];
+			if (this->maxGridCoords[j] < vertex.coords[j])
+				this->maxGridCoords[j] = vertex.coords[j];
 		}
 	}
 }
