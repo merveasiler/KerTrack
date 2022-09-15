@@ -54,18 +54,17 @@ void KernelExpansion_KerTrack::expandKernel() {
 			break;
 	}
 
-	/*
+	
 	int num_of_non_kernel_points = 0;
-	for (int i = 0; i < kernel->getNumOfVerts(); i++) {
-		if (findClosestValueSatisfiedByPoint(kernel->getVertex(i)->coords, halfSpaceSet) > 3 * EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel->getVertex(i)->coords, halfSpaceSet) > 3 * EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel->getVertex(i)->coords, halfSpaceSet) > 3 * EPSILON) {
-			//cout << "non-kernel point" << endl;
+	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
+		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON) {
 			num_of_non_kernel_points++;
 		}
 	}
 	cout << "num of non-kernel points is: " << num_of_non_kernel_points << endl;
-	*/
+	
 
 }
 
@@ -205,68 +204,67 @@ vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, doub
 
 void KernelExpansion_KerTrack::orderTheFaces(int base_id, int partner_id, vector<int> next_partner_ids, double* startPoint, double* currentEdgeDirection) {
 
-	vector<double*> edgeDirections;
+	vector<int> ordered_next_partner_ids;
 	vector<double> cosAngles;
 	bool should_revert = false;
 
 	double currentEdgeDirection2[3];
 	crossProduct(halfSpaceSet[base_id].ABCD, halfSpaceSet[partner_id].ABCD, currentEdgeDirection2);
-	
 	if (dotProduct(currentEdgeDirection, currentEdgeDirection2) < 0) {
 		multVect(currentEdgeDirection, -1.0, currentEdgeDirection2);
 		for (int k=0; k<3; k++)
 			currentEdgeDirection[k] = currentEdgeDirection2[k];
 		should_revert = true;
 	}
-
+	
 	// ordering
 	for (int i = 0; i < next_partner_ids.size(); i++) {
-		double* nextEdgeDirection = crossProduct(halfSpaceSet[base_id].ABCD, halfSpaceSet[next_partner_ids[i]].ABCD);
+		
+		double nextEdgeDirection[3];
+		crossProduct(halfSpaceSet[base_id].ABCD, halfSpaceSet[next_partner_ids[i]].ABCD, nextEdgeDirection);
 		normalize(nextEdgeDirection);
-		edgeDirections.push_back(nextEdgeDirection);
 		double cosAngle = dotProduct(currentEdgeDirection, nextEdgeDirection);
 		cosAngles.push_back(cosAngle);
+		ordered_next_partner_ids.push_back(next_partner_ids[i]);
 
 		for (int j = 0; j < cosAngles.size(); j++) {
 			if (cosAngle < cosAngles[j]) {
 				for (int k = cosAngles.size() - 1; k >= j; k--) {
 					cosAngles[k] = cosAngles[k - 1];
-					edgeDirections[k] = edgeDirections[k - 1];
+					ordered_next_partner_ids[k] = ordered_next_partner_ids[k - 1];
 				}
 				cosAngles[j] = cosAngle;
-				edgeDirections[j] = nextEdgeDirection;
+				ordered_next_partner_ids[j] = next_partner_ids[i];
 				break;
 			}
 		}
 	}
-	
-	if (should_revert) {
-		for (int i = 0; i < next_partner_ids.size(); i++) {
-			double* reversedEdgeDirection = new double[3];
-			multVect(edgeDirections[i], -1.0, reversedEdgeDirection);
-			delete edgeDirections[i];
-			edgeDirections[i] = reversedEdgeDirection;
+
+	ordered_next_partner_ids.insert(ordered_next_partner_ids.begin(), base_id);
+	ordered_next_partner_ids.push_back(partner_id);
+
+	for (int i = 0, j = 1; j < ordered_next_partner_ids.size(); j++) {
+		if (isWalkedEdge(ordered_next_partner_ids[i], ordered_next_partner_ids[j])) {
+			double edgeDirection[3];
+			if (i == 0) 
+				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, NULL, edgeDirection);	
+			else 
+				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, halfSpaceSet[base_id].ABCD, edgeDirection);
+			
+			if (isValidEdge(startPoint, edgeDirection)) {
+				edgePartners[ordered_next_partner_ids[i]].push(EdgePartnerTriple(ordered_next_partner_ids[j], edgeDirection, startPoint, kernel.getNumOfVerts() - 1));
+				i = j;
+			}
 		}
-
+		else
+			i = j;
 	}
 
-	if (shouldSaveEdge(base_id, next_partner_ids[0]))
-		edgePartners[base_id].push(EdgePartnerTriple(next_partner_ids[0], edgeDirections[0], startPoint, kernel.getNumOfVerts() - 1));
-	
-	next_partner_ids.push_back(partner_id);
-	for (int i = 0, j = 1; j < next_partner_ids.size(); j++) {
-		if (next_partner_ids[j] == -1)
-			continue;
-		if (shouldSaveEdge(next_partner_ids[i], next_partner_ids[j]))
-			saveFoundEdgeToProcess(next_partner_ids[i], next_partner_ids[j], startPoint, halfSpaceSet[base_id].ABCD);
-		i = j;
-	}
-
-	edgeDirections.clear();
+	ordered_next_partner_ids.clear();
 	cosAngles.clear();
 }
 
-bool KernelExpansion_KerTrack::shouldSaveEdge(int hs1_id, int hs2_id) {
+bool KernelExpansion_KerTrack::isWalkedEdge(int hs1_id, int hs2_id) {
 
 	bool walkedEdge = false;
 	for (int j = 0; j < edgePartnerIds[hs1_id].size(); j++)
@@ -287,19 +285,31 @@ bool KernelExpansion_KerTrack::shouldSaveEdge(int hs1_id, int hs2_id) {
 
 }
 
-void KernelExpansion_KerTrack::saveFoundEdgeToProcess(int base_id, int partner_id, double* startPoint, double* directioner) {
+void KernelExpansion_KerTrack::findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* directioner, double* edgeDirection) {
 
-	double edgeDirection[3], nextEdgeDirection[3];
-	crossProduct(halfSpaceSet[base_id].ABCD, halfSpaceSet[partner_id].ABCD, edgeDirection);
+	crossProduct(halfSpaceSet[hs1_id].ABCD, halfSpaceSet[hs2_id].ABCD, edgeDirection);
 	normalize(edgeDirection);
+	if (directioner) {
+		if (dotProduct(edgeDirection, directioner) > 0)
+			multVect(edgeDirection, -1, edgeDirection);
+	}
+	else {
+		if (should_revert)
+			multVect(edgeDirection, -1.0, edgeDirection);
+	}
+
+}
+
+bool KernelExpansion_KerTrack::isValidEdge(double* startPoint, double* edgeDirection) {
+
+	double testPoint[3];
 	for (int k = 0; k < 3; k++)
-		nextEdgeDirection[k] = edgeDirection[k];
-
-	if (dotProduct(edgeDirection, directioner) > 0)
-		multVect(edgeDirection, -1, nextEdgeDirection);
-
-	edgePartners[base_id].push(EdgePartnerTriple(partner_id, nextEdgeDirection, startPoint, kernel.getNumOfVerts() - 1));
-
+		testPoint[k] = startPoint[k] + EPSILON * edgeDirection[k];
+	double t = findClosestValueSatisfiedByPoint(testPoint, halfSpaceSet);
+	if (t > EPSILON)
+		return false;
+	return true;
+	
 }
 
 double* KernelExpansion_KerTrack::findInitialPoint_1() {

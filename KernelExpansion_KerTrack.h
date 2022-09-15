@@ -44,8 +44,9 @@ class KernelExpansion_KerTrack : public KernelExpansion {
 	int findTheClosestHalfSpace(double* point, int id);
 	vector<int> findTheClosestHalfSpace(int vertexId, double* lineDirection, int lineParent1Id, int lineParent2Id, double* newpoint);
 	void orderTheFaces(int base_id, int partner_id, vector<int> next_partner_ids, double* startPoint, double* currentEdgeDirection);
-	bool shouldSaveEdge(int hs1_id, int hs2_id);
-	void saveFoundEdgeToProcess(int base_id, int next_partner_id, double* startPoint, double* edgeDirectioner);
+	bool isWalkedEdge(int hs1_id, int hs2_id);
+	void findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* directioner, double* edgeDirection);
+	bool isValidEdge(double* startPoint, double* edgeDirection);
 	double* findInitialPoint_1();
 	double* findInitialPoint_2();
 	void findInitialPoint_3(double* point);

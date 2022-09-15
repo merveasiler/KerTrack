@@ -46,7 +46,7 @@ double* projectVertexOnPlane(Plane* plane, double* vertex);
 
 int isPointInRegion(const double* point, const HalfSpace* halfSpace);
 
-double findClosestValueSatisfiedByPoint(const double point[3], const vector<HalfSpace*>& halfSpaceContainer);
+double findClosestValueSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer);
 
 double* findValueVectorSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer);
 

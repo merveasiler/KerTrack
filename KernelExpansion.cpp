@@ -177,7 +177,7 @@ bool KernelExpansion::isCellValidForQueue(int  neighbor_i, int neighbor_j, int n
 
 bool KernelExpansion::isInKernel(double* scalarVector) {
 	for (int i = 0; i < halfSpaceSet.size(); i++)
-		if (scalarVector[i] > 0)
+		if (scalarVector[i] > EPSILON)
 			return false;	// out
 	return true;		// in
 }

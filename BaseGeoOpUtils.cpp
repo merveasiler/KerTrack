@@ -193,21 +193,21 @@ int isPointInRegion(const double* point, const HalfSpace* halfSpace) {
 		return -1;	// outside
 }
 
-double findClosestValueSatisfiedByPoint(const double point[3], const vector<HalfSpace*>& halfSpaceContainer) {
+double findClosestValueSatisfiedByPoint(const double point[3], const vector<HalfSpace>& halfSpaceContainer) {
 
 	double closestValue = numeric_limits<double>::infinity();
 	double furthestValue = -numeric_limits<double>::infinity();
 
 	for (unsigned int i = 0; i < halfSpaceContainer.size(); i++) {
-		HalfSpace* halfSpace = halfSpaceContainer[i];
+		HalfSpace halfSpace = halfSpaceContainer[i];
 		
-		double total = halfSpace->ABCD[3];
+		double total = halfSpace.ABCD[3];
 		for (unsigned int j = 0; j < 3; j++) {
-			double mult = halfSpace->ABCD[j] * point[j];
+			double mult = halfSpace.ABCD[j] * point[j];
 			total += mult;
 		}
 		
-		if ( (halfSpace->isLargerThanZero && total >= 0) || (!halfSpace->isLargerThanZero && total <= 0) ) {
+		if ( (halfSpace.isLargerThanZero && total >= 0) || (!halfSpace.isLargerThanZero && total <= 0) ) {
 			if (abs(total) - closestValue < 3*EPSILON)
 				closestValue = abs(total);
 		}
