@@ -397,7 +397,12 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 	// Print the average time
 	double elapsed_secs = totalTime / executionCount;
 	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by KerTrack." << endl;
-	return kernel;
+/*
+	MaterialSetting* kernelMatSetting = new MaterialSetting(0, 0, 1, 0);
+	MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0.5);
+	vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(&incompleteKernel, kernelMatSetting), make_tuple(&mesh, meshMatSetting) };
+	drawMultipleMeshToScene(mesh_mat_set);
+*/	return kernel;
 }
 
 Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {

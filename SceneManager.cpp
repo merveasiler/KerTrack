@@ -64,9 +64,12 @@ void drawMultipleMeshToScene(vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set
 		MaterialSetting* mat;
 		tie(mesh, mat) = mesh_mat_set[i];
 		SoSeparator* res = new SoSeparator();
-		painter->getShapeSep(mesh, mat, res);
-		if (i > 0)
-			painter->drawTriangulation(mesh, res);
+		if (i == 0)
+			painter->getShapeSepByEdges(mesh, mat, res);
+		else {
+			painter->getShapeSep(mesh, mat, res);
+			//painter->drawTriangulation(mesh, res);
+		}
 		resSet.push_back(res);
 	}
 

@@ -42,9 +42,6 @@ void KernelExpansion_KerTrack::expandKernel() {
 
 					if (kernel.getNumOfVerts() > previousNumOfVerts || isTripleSame(kernelVertex, startPoint))
 						orderTheFaces(i, partnerId, theClosestIds, kernelVertex, edgeDirection);
-					
-					//if (startPointId >= 0)
-					//	kernel.addEdge(startPointId, kernel->getNumOfVerts() - 1);
 
 				}
 				any_white_left = true;
@@ -177,7 +174,8 @@ vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, doub
 
 	for (int i = 0; i < 3; i++)
 		newpoint[i] = kernel.getVertex(vertexId).coords[i] + lineDirection[i] * theClosestDistance;
-
+	
+	int startId = vertexId;
 	if (theClosestDistance > 0) {
 		bool previousVertex = false;
 		for (int v = 0; v < kernel.getNumOfVerts(); v++)
@@ -198,6 +196,8 @@ vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, doub
 
 	for (int i = 0; i < theClosestIds.size(); i++)
 		vertexParentIds[vertexId].push_back(theClosestIds[i]);
+
+	kernel.addEdge(startId, vertexId);
 
 	return theClosestIds;
 
