@@ -25,7 +25,7 @@
   */
 
 #include <Eigen/Eigen>
-
+#include <vector>
 #include <cmath>
 #include <random>
 
@@ -799,7 +799,7 @@ namespace sdlp
 } // namespace sdlp
 
 struct HalfSpace;
-double* sdlpMain(double extremeDirection[3], HalfSpace** halfSpaceSet, int numOfHalfSpaces);
+double* sdlpMain(double extremeDirection[3], std::vector<HalfSpace>& halfSpaceSet);
 
 class Mesh;
 double* sdlpMain(Mesh& hostMesh, double extremeDirection[3]);

@@ -57,9 +57,9 @@ void KernelExpansion_KerTrack::expandKernel() {
 	
 	int num_of_non_kernel_points = 0;
 	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
-		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON) {
+		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON) {
 			num_of_non_kernel_points++;
 		}
 	}
@@ -86,14 +86,17 @@ vector<double> KernelExpansion_KerTrack::initialize(double* point) {
 int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, vector<double>& scalarsVector) {
 
 	double theClosestDistance = numeric_limits<double>::infinity();
-	int theClosestId = -1;
+	vector<int> theClosestIds;
 	for (int i = 0; i < halfSpaceSet.size(); i++) {
-		if (abs(scalarsVector[i]) < theClosestDistance) {
-			theClosestId = i;
+		if (abs(scalarsVector[i]) <= theClosestDistance) {
+			if (abs(scalarsVector[i]) < theClosestDistance)
+				theClosestIds.clear();
+			theClosestIds.push_back(i);
 			theClosestDistance = abs(scalarsVector[i]);
 		}
 	}
 
+	int theClosestId = theClosestIds[0];
 	scalarsVector.clear();
 	for (int i = 0; i < 3; i++)
 		point[i] = point[i] + halfSpaceSet[theClosestId].ABCD[i] * theClosestDistance;
@@ -103,47 +106,81 @@ int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, vector<doub
 int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, int id) {
 
 	double theClosestDistance = numeric_limits<double>::infinity();
-	int theClosestId = -1;
-	double theClosestDirection[3], intersectionLineDirection[3];;
+	vector<int> theClosestIds;
+	vector<double*> theClosestDirections, intersectionLineDirections;
 	for (int s = 0, i = 0, bound = id; s < 2; s++) {
 		for (; i < bound; i++) {
 			
-			double lineDirection[3], rayDirection[3];
+			double* lineDirection = new double[3];
 			crossProduct(halfSpaceSet[i].ABCD, halfSpaceSet[id].ABCD, lineDirection);
 			normalize(lineDirection);
+			double* rayDirection = new double[3];
 			crossProduct(halfSpaceSet[id].ABCD, lineDirection, rayDirection);
 			normalize(rayDirection);
 			Line ray(point, rayDirection);
 			double t = findLinePlaneIntersection(ray, halfSpaceSet[i]);
-			if (t < theClosestDistance) {
-				theClosestId = i;
-				theClosestDistance = t;
-				for (int k = 0; k < 3; k++) {
-					theClosestDirection[k] = rayDirection[k];
-					intersectionLineDirection[k] = lineDirection[k];
+			if (t >= 0 && t <= theClosestDistance) {
+				if (t < theClosestDistance) {
+					for (int k = 0; k < theClosestDirections.size(); k++) {
+						delete[] theClosestDirections[k];
+						delete[] intersectionLineDirections[k];
+					}
+					theClosestDirections.clear();
+					intersectionLineDirections.clear();
+					theClosestIds.clear();
 				}
+				theClosestIds.push_back(i);
+				theClosestDirections.push_back(rayDirection);
+				intersectionLineDirections.push_back(lineDirection);
+				theClosestDistance = t;
+			}
+			else {
+				delete[] lineDirection;
+				delete[] rayDirection;
 			}
 		}
 		i = id + 1;
 		bound = halfSpaceSet.size();
 	}
 
-	for (int i = 0; i < 3; i++)
-		point[i] = point[i] + theClosestDirection[i] * theClosestDistance;
 
-	edgePartners[id].push(EdgePartnerTriple(theClosestId, intersectionLineDirection, point, 0));
-	edgePartnerIds[id].push_back(theClosestId);
-	edgePartnerIds[theClosestId].push_back(id);
+	double newpoint[3];
+	int validPlaneId;
+	for (int i = 0; i < theClosestIds.size(); i++) {
+		for (int k = 0; k < 3; k++)
+			newpoint[k] = point[k] + theClosestDirections[i][k] * theClosestDistance;
+		if (!isValidEdge(newpoint, intersectionLineDirections[i])) {
+			multVect(intersectionLineDirections[i], -1, intersectionLineDirections[i]);
+			if (!isValidEdge(newpoint, intersectionLineDirections[i]))
+				continue;
+		}
+		validPlaneId = i;
+		break;
+	}
+
+	for (int k = 0; k < 3; k++)
+		point[k] = newpoint[k];
+
+	edgePartners[id].push(EdgePartnerTriple(theClosestIds[validPlaneId], intersectionLineDirections[validPlaneId], point, 0));
+	edgePartnerIds[id].push_back(theClosestIds[validPlaneId]);
+	edgePartnerIds[theClosestIds[validPlaneId]].push_back(id);
 	isKernelFace[id] = ProcessColor::WHITE;
-	isKernelFace[theClosestId] = ProcessColor::WHITE;
+	isKernelFace[theClosestIds[validPlaneId]] = ProcessColor::WHITE;
 	
 	vector<int> parentIdsForNewVertex;
 	parentIdsForNewVertex.push_back(id);
-	parentIdsForNewVertex.push_back(theClosestId);
+	parentIdsForNewVertex.push_back(theClosestIds[validPlaneId]);
 	vertexParentIds.push_back(parentIdsForNewVertex);
 	kernel.addVertex(point[0], point[1], point[2]);
 
-	return theClosestId;
+	for (int i = 0; i < theClosestIds.size(); i++) {
+		delete[] theClosestDirections[i];
+		delete[] intersectionLineDirections[i];
+	}
+	theClosestDirections.clear();
+	intersectionLineDirections.clear();
+
+	return validPlaneId;
 }
 
 vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, double* lineDirection, int lineParent1Id, int lineParent2Id, double* newpoint) {
@@ -173,6 +210,9 @@ vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, doub
 
 	for (int i = 0; i < 3; i++)
 		newpoint[i] = kernel.getVertex(vertexId).coords[i] + lineDirection[i] * theClosestDistance;
+	double t = findClosestValueSatisfiedByPoint(newpoint, halfSpaceSet);
+	if (t > EPSILON)
+		return theClosestIds;
 	
 	int startId = vertexId;
 	if (theClosestDistance > 0) {
@@ -211,9 +251,7 @@ void KernelExpansion_KerTrack::orderTheFaces(int base_id, int partner_id, vector
 	double currentEdgeDirection2[3];
 	crossProduct(halfSpaceSet[base_id].ABCD, halfSpaceSet[partner_id].ABCD, currentEdgeDirection2);
 	if (dotProduct(currentEdgeDirection, currentEdgeDirection2) < 0) {
-		multVect(currentEdgeDirection, -1.0, currentEdgeDirection2);
-		for (int k=0; k<3; k++)
-			currentEdgeDirection[k] = currentEdgeDirection2[k];
+		multVect(currentEdgeDirection, -1.0, currentEdgeDirection);
 		should_revert = true;
 	}
 	
@@ -246,18 +284,13 @@ void KernelExpansion_KerTrack::orderTheFaces(int base_id, int partner_id, vector
 	for (int i = 0, j = 1; j < ordered_next_partner_ids.size(); j++) {
 		if (isWalkedEdge(ordered_next_partner_ids[i], ordered_next_partner_ids[j])) {
 			double edgeDirection[3];
-			if (i == 0) 
-				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, NULL, edgeDirection);	
-			else 
-				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, halfSpaceSet[base_id].ABCD, edgeDirection);
-			
-			if (isValidEdge(startPoint, edgeDirection)) {
+			findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, edgeDirection);	
+			if (isValidEdge(startPoint, edgeDirection))
 				edgePartners[ordered_next_partner_ids[i]].push(EdgePartnerTriple(ordered_next_partner_ids[j], edgeDirection, startPoint, kernel.getNumOfVerts() - 1));
-				i = j;
-			}
+			else
+				continue;
 		}
-		else
-			i = j;
+		i = j;
 	}
 
 	ordered_next_partner_ids.clear();
@@ -285,18 +318,12 @@ bool KernelExpansion_KerTrack::isWalkedEdge(int hs1_id, int hs2_id) {
 
 }
 
-void KernelExpansion_KerTrack::findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* directioner, double* edgeDirection) {
+void KernelExpansion_KerTrack::findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* edgeDirection) {
 
 	crossProduct(halfSpaceSet[hs1_id].ABCD, halfSpaceSet[hs2_id].ABCD, edgeDirection);
 	normalize(edgeDirection);
-	if (directioner) {
-		if (dotProduct(edgeDirection, directioner) > 0)
-			multVect(edgeDirection, -1, edgeDirection);
-	}
-	else {
-		if (should_revert)
-			multVect(edgeDirection, -1.0, edgeDirection);
-	}
+	if (should_revert)
+		multVect(edgeDirection, -1.0, edgeDirection);
 
 }
 
@@ -306,7 +333,7 @@ bool KernelExpansion_KerTrack::isValidEdge(double* startPoint, double* edgeDirec
 	for (int k = 0; k < 3; k++)
 		testPoint[k] = startPoint[k] + EPSILON * edgeDirection[k];
 	double t = findClosestValueSatisfiedByPoint(testPoint, halfSpaceSet);
-	if (t > EPSILON)
+	if (t > 0.5*EPSILON)
 		return false;
 	return true;
 	

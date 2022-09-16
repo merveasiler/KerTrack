@@ -63,7 +63,7 @@ void doExperimentForPaper(string meshName) {
 	positions.push_back(new double[3]{objectWidth[0] + breakWidth[0], 0, 0 });	// on the corner scene
 	outputs.push_back(make_tuple(make_tuple(kernels[0], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 	cout << endl;
-
+	
 		// ... KERTRACK
 	for (int j = 1, i = 0; i < kernels.size()/2; i++, j++) {
 		kernels[j] = ComputeKernelByKerTrack(mesh);
@@ -76,7 +76,7 @@ void doExperimentForPaper(string meshName) {
 
 		// ... SDF-KER
 	for (int j = 0, i = 1 + kernels.size() / 2; i < kernels.size(); i++, j++) {
-		kernels[i] = NULL;	// ComputeKernelBySDFKer(mesh, cellSizeRatios[j]);
+		kernels[i] = NULL;// ComputeKernelBySDFKer(mesh, cellSizeRatios[j]);
 		double* position = new double[3]{ 0, objectWidth[1] + breakWidth[1], 0 };	// on the upper row
 		position[0] = j * (objectWidth[0] + breakWidth[0]);
 		positions.push_back(position);
@@ -96,13 +96,21 @@ void doExperimentForPaper(string meshName) {
 		/*********************************** COMPARE HAUSDORFF DISTANCES & VOLUMES ***********************************/
 		double groundTruthVolume = groundTruth->computeVolume();
 		for (int j = 0, mod = (kernels.size() - 1) / 2, i = 1; i < kernels.size(); i++, j++) {
-			double volume = kernels[i]->computeVolume();
+			double volume = 0;
+			if (kernels[i])
+				volume = kernels[i]->computeVolume();
 			if (volume < EPSILON)
 				continue;
 			cout << "Volume of the kernel of " << cellSizeRatios[j % mod] << ": " << volume << " out of " << groundTruthVolume << "." << endl;
-			cout << "Volume difference between the one <" << cellSizeRatios[j % mod] << "> and ground truth (CGAL): " << groundTruthVolume - volume << endl;
+			double volumeDiff = groundTruthVolume - volume;
+			if (volumeDiff < EPSILON)
+				volumeDiff = 0;
+			cout << "Volume difference between the one <" << cellSizeRatios[j % mod] << "> and ground truth (CGAL): " << volumeDiff << endl;
 
 			double* hd = computeHausdorffDistance(groundTruth, kernels[i]);
+			for (int k=0; k<3; k++)
+				if (hd[k] < EPSILON)
+					hd[k] = 0;
 			cout << "Hausdorff distance between the one <" << cellSizeRatios[j % mod] << "> and ground truth (CGAL): <" << hd[0] << ", " << hd[1] << ", " << hd[2] << ">." << endl << endl;
 			delete[] hd;
 		}
@@ -114,7 +122,9 @@ void doExperimentForPaper(string meshName) {
 			outputs_to_draw.push_back(outputs[i]);
 			positions_to_draw.push_back(positions[i]);
 		}
+		
 		drawMultipleScenes(outputs_to_draw, positions_to_draw, totalSceneSize);
+		
 	}
 
 	/************************************************* CLEAN-UP *************************************************/
@@ -410,30 +420,23 @@ Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
 	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
-		double* kernelPoint = sdlpMain(mesh, extremeDirection);
 		Mesh* kernel = NULL;
-		if (kernelPoint)
-			kernel = computeKernelByCGAL(mesh, kernelPoint);
+		clock_t begin = clock();
+		kernel = computeKernelByCGAL(mesh, NULL);
 		clock_t end = clock();
 		totalTime += double(end - begin) / CLOCKS_PER_SEC;
 
-		if (kernelPoint) {
-			delete[] kernelPoint;
+		if (kernel)
 			delete kernel;
-		}
 	}
 
 	// Execute to see the results
-	double* kernelPoint = sdlpMain(mesh, extremeDirection);
 	Mesh* kernel;
-	if (kernelPoint) {
-		kernel = computeKernelByCGAL(mesh, kernelPoint);
-		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
-		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-		delete[] kernelPoint;
-	}
-	else {
+	kernel = computeKernelByCGAL(mesh, NULL);
+	cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
+	cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
+	
+	if (!kernel) {
 		kernel = NULL;
 		cout << "Kernel is empty!" << endl;
 		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";

@@ -118,7 +118,7 @@ void drawMultipleScenes(vector<tuple<tuple<Mesh*, MaterialSetting*>, tuple<Mesh*
 	vector<SoSeparator*> resSets;
 	SoSeparator* cornerResSet = NULL;
 	Painter* painter = new Painter();
-
+	
 	// SCENES
 	for (int i = 0; i < outputs.size(); i++) {
 		tuple<tuple<Mesh*, MaterialSetting*>, tuple<Mesh*, MaterialSetting*>> kernel_mesh_tuple = outputs[i];

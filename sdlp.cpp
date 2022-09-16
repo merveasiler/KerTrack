@@ -4,10 +4,10 @@
 
 using namespace sdlp;
 
-double* sdlpMain(double extremeDirection[3], HalfSpace** halfSpaceSet, int numOfHalfSpaces) {
+double* sdlpMain(double extremeDirection[3], vector<HalfSpace>& halfSpaceSet) {
 
     int d = 3;
-    int m = numOfHalfSpaces;
+    int m = halfSpaceSet.size();
     Eigen::VectorXd x(d);    // decision variables
     Eigen::VectorXd c(d);    // objective coefficients
     Eigen::MatrixXd A(m, d); // constraint matrix
@@ -16,10 +16,10 @@ double* sdlpMain(double extremeDirection[3], HalfSpace** halfSpaceSet, int numOf
     //c << 0.0, 0.0, 1.0;   // default
     c << extremeDirection[0], extremeDirection[1], extremeDirection[2];
 
-    for (int i = 0; i < numOfHalfSpaces; i++) {
-        HalfSpace* hp = halfSpaceSet[i];
-        A.row(i) << hp->ABCD[0], hp->ABCD[1], hp->ABCD[2];
-        b(i) = -hp->ABCD[3];
+    for (int i = 0; i < halfSpaceSet.size(); i++) {
+        HalfSpace hp = halfSpaceSet[i];
+        A.row(i) << hp.ABCD[0], hp.ABCD[1], hp.ABCD[2];
+        b(i) = -hp.ABCD[3];
     }
 
     double minobj = linprog(c, A, b, x);
@@ -44,12 +44,6 @@ double* sdlpMain(Mesh& hostMesh, double extremeDirection[3]) {
 
     vector<HalfSpace> halfSpaceSet;
     computeHalfSpacesFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts(), halfSpaceSet);
-    HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-    for (int i = 0; i < halfSpaceSet.size(); i++)
-        halfSpaces[i] = &halfSpaceSet[i];
-
-    double* kernel_point = sdlpMain(extremeDirection, halfSpaces, halfSpaceSet.size());
-    delete[] halfSpaces;
-
+    double* kernel_point = sdlpMain(extremeDirection, halfSpaceSet);
     return kernel_point;
 }

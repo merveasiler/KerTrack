@@ -10,13 +10,8 @@ KernelExpansion::KernelExpansion(double* extremeDirection, const Mesh& hostMesh,
 	this->grid = grid;
 	
 	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
-	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < this->halfSpaceSet.size(); i++)
-		halfSpaces[i] = &this->halfSpaceSet[i];
-	
-	this->initialPoint = sdlpMain(extremeDirection, halfSpaces, halfSpaceSet.size());	// compute initial kernel point
+	this->initialPoint = sdlpMain(extremeDirection, halfSpaceSet);	// compute initial kernel point
 	this->extremeCorners[0] = nullptr;	this->extremeCorners[1] = nullptr;
-	delete[] halfSpaces;
 
 }
 
@@ -25,20 +20,17 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh, double cellSizeRatio) {
 	this->hostMeshptr = &hostMesh;
 
 	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
-	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < this->halfSpaceSet.size(); i++)
-		halfSpaces[i] = &this->halfSpaceSet[i];
 
 	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
 	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
 	for (int i = 0; i < 6; i++) {
-		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaces, halfSpaceSet.size());	// compute initial kernel point at the given extreme direction
-		if (!this->initialPoint) {	delete[] halfSpaces; return; }
+		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
+		if (!this->initialPoint)
+			return;
 		this->extremeCorners[i % 2][int(i / 2)] = this->initialPoint[int(i / 2)];
 		delete[] this->initialPoint;
 	}
 	this->initialPoint = nullptr;
-	delete[] halfSpaces;
 
 	Grid grid(extremeCorners[1], extremeCorners[0]);
 	grid.constructGridByDiagonalRatio(cellSizeRatio);
@@ -50,20 +42,17 @@ KernelExpansion::KernelExpansion(const Mesh& hostMesh, int gridDimension[3]) {
 	this->hostMeshptr = &hostMesh;
 
 	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
-	HalfSpace** halfSpaces = new HalfSpace * [halfSpaceSet.size()];
-	for (int i = 0; i < this->halfSpaceSet.size(); i++)
-		halfSpaces[i] = &this->halfSpaceSet[i];
 
 	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
 	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
 	for (int i = 0; i < 6; i++) {
-		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaces, halfSpaceSet.size());	// compute initial kernel point at the given extreme direction
-		if (!this->initialPoint) { delete[] halfSpaces; return; }
+		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
+		if (!this->initialPoint)
+			return;
 		this->extremeCorners[i % 2][int(i / 2)] = this->initialPoint[int(i / 2)];
 		delete[] this->initialPoint;
 	}
 	this->initialPoint = nullptr;
-	delete[] halfSpaces;
 
 	Grid grid(extremeCorners[1], extremeCorners[0]);
 	grid.constructGridByNumOfCells(gridDimension);
