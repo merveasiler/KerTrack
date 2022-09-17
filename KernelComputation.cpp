@@ -84,7 +84,7 @@ void doExperimentForPaper(string meshName) {
 		cout << endl;
 	}
 
-	if (groundTruth) {
+	if (groundTruth->getNumOfVerts() > 0) {
 
 		// POLYHEDRON-KERNEL (ITALIAN JOB)
 		Mesh* polyhedronKernel = new Mesh();
@@ -103,18 +103,18 @@ void doExperimentForPaper(string meshName) {
 				continue;
 			cout << "Volume of the kernel of " << cellSizeRatios[j % mod] << ": " << volume << " out of " << groundTruthVolume << "." << endl;
 			double volumeDiff = groundTruthVolume - volume;
-			if (volumeDiff < EPSILON)
+			if (volumeDiff < 1e9*EPSILON)
 				volumeDiff = 0;
 			cout << "Volume difference between the one <" << cellSizeRatios[j % mod] << "> and ground truth (CGAL): " << volumeDiff << endl;
 
 			double* hd = computeHausdorffDistance(groundTruth, kernels[i]);
 			for (int k=0; k<3; k++)
-				if (hd[k] < EPSILON)
+				if (hd[k] < 1e10*EPSILON)
 					hd[k] = 0;
 			cout << "Hausdorff distance between the one <" << cellSizeRatios[j % mod] << "> and ground truth (CGAL): <" << hd[0] << ", " << hd[1] << ", " << hd[2] << ">." << endl << endl;
 			delete[] hd;
 		}
-
+		
 		/*************************************************** DRAW ***************************************************/
 		vector<tuple<tuple<Mesh*, MaterialSetting*>, tuple<Mesh*, MaterialSetting*>>> outputs_to_draw;
 		vector<double*> positions_to_draw;
@@ -379,7 +379,7 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 		KernelExpansion_KerTrack kertrack(mesh);
 		clock_t begin = clock();
 		kertrack.expandKernel(); 
-		clock_t end = clock();
+		clock_t end = clock(); 
 		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
 		if (incompleteKernel.getNumOfVerts() > 0) {
 			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
@@ -407,12 +407,8 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 	// Print the average time
 	double elapsed_secs = totalTime / executionCount;
 	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by KerTrack." << endl;
-/*
-	MaterialSetting* kernelMatSetting = new MaterialSetting(0, 0, 1, 0);
-	MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0.5);
-	vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(&incompleteKernel, kernelMatSetting), make_tuple(&mesh, meshMatSetting) };
-	drawMultipleMeshToScene(mesh_mat_set);
-*/	return kernel;
+
+	return kernel;
 }
 
 Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {

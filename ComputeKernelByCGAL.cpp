@@ -22,8 +22,8 @@ Mesh* computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint) {
     halfSpaceCoeffs.clear();
 
     CGALMesh chull;
-    CGAL::halfspace_intersection_with_constructions_3(planes.begin(), planes.end(), chull);
-    //CGAL::halfspace_intersection_3(planes.begin(), planes.end(), chull);    // if no point inside the intersection is provided, one will be automatically found using linear programming
+    //CGAL::halfspace_intersection_with_constructions_3(planes.begin(), planes.end(), chull);
+    CGAL::halfspace_intersection_3(planes.begin(), planes.end(), chull);    // if no point inside the intersection is provided, one will be automatically found using linear programming
     //CGAL::halfspace_intersection_3(planes.begin(), planes.end(), chull, CGALPoint(kernelPoint[0], kernelPoint[1], kernelPoint[2]));   
     //std::cout << "The convex hull contains " << num_vertices(chull) << " vertices" << std::endl;
 

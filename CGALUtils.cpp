@@ -115,12 +115,12 @@ Mesh* computeConvexHull(const vector<Vertex>& vertices) {
         CGALPoint p(v.coords[0], v.coords[1], v.coords[2]);
         points.push_back(p);
     }
-
+    
     // define polyhedron to hold convex hull
     CGALPolyhedron chull;
     // compute convex hull of non-collinear points
     CGAL::convex_hull_3(points.begin(), points.end(), chull);
-
+ 
     return convertCGALPolyhedronToMesh(chull);
 }
 

@@ -2,6 +2,7 @@
 
 #include "KernelExpansion_KerTrack.h"
 #include "BaseGeoOpUtils.h"
+#include "sdlp.h"
 
 KernelExpansion_KerTrack::KernelExpansion_KerTrack(const Mesh& hostMesh) :
 	KernelExpansion(hostMesh) {};
@@ -22,7 +23,7 @@ void KernelExpansion_KerTrack::expandKernel() {
 	int theClosestId1 = findTheClosestHalfSpace(point, scalarsVector);
 	int theClosestId2 = findTheClosestHalfSpace(point, theClosestId1);
 	int number_of_kernel_faces = 0;
-	
+
 	for (bool any_white_left = false; ; any_white_left = false) {
 		for (int i = 0; i < halfSpaceSet.size(); i++) {
 			if (isKernelFace[i] == ProcessColor::WHITE) {
@@ -53,18 +54,17 @@ void KernelExpansion_KerTrack::expandKernel() {
 		if (!any_white_left)
 			break;
 	}
-
-	
+/*
 	int num_of_non_kernel_points = 0;
 	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
-		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  EPSILON) {
+		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON) {
 			num_of_non_kernel_points++;
 		}
 	}
 	cout << "num of non-kernel points is: " << num_of_non_kernel_points << endl;
-	
+*/
 
 }
 
@@ -106,6 +106,49 @@ int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, vector<doub
 int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, int id) {
 
 	double theClosestDistance = numeric_limits<double>::infinity();
+	int theClosestId = -1;
+	double theClosestDirection[3], intersectionLineDirection[3];
+	for (int s = 0, i = 0, bound = id; s < 2; s++) {
+		for (; i < bound; i++) {
+			double lineDirection[3], rayDirection[3];
+			crossProduct(halfSpaceSet[i].ABCD, halfSpaceSet[id].ABCD, lineDirection);
+			normalize(lineDirection);
+			crossProduct(halfSpaceSet[id].ABCD, lineDirection, rayDirection);
+			normalize(rayDirection);
+			Line ray(point, rayDirection);
+			double t = findLinePlaneIntersection(ray, halfSpaceSet[i]);
+			if (t < theClosestDistance) {
+				theClosestId = i;
+				theClosestDistance = t;
+				for (int k = 0; k < 3; k++) {
+					theClosestDirection[k] = rayDirection[k];
+					intersectionLineDirection[k] = lineDirection[k];
+				}
+			}
+		}
+		i = id + 1;
+		bound = halfSpaceSet.size();
+	}
+
+	for (int i = 0; i < 3; i++)
+		point[i] = point[i] + theClosestDirection[i] * theClosestDistance;
+
+	edgePartners[id].push(EdgePartnerTriple(theClosestId, intersectionLineDirection, point, 0));
+	edgePartnerIds[id].push_back(theClosestId);
+	edgePartnerIds[theClosestId].push_back(id);
+	isKernelFace[id] = ProcessColor::WHITE;
+	isKernelFace[theClosestId] = ProcessColor::WHITE;
+
+	vector<int> parentIdsForNewVertex;
+	parentIdsForNewVertex.push_back(id);
+	parentIdsForNewVertex.push_back(theClosestId);
+	vertexParentIds.push_back(parentIdsForNewVertex);
+	kernel.addVertex(point[0], point[1], point[2]);
+
+	return theClosestId;
+
+	/*
+	double theClosestDistance = numeric_limits<double>::infinity();
 	vector<int> theClosestIds;
 	vector<double*> theClosestDirections, intersectionLineDirections;
 	for (int s = 0, i = 0, bound = id; s < 2; s++) {
@@ -145,7 +188,7 @@ int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, int id) {
 
 
 	double newpoint[3];
-	int validPlaneId;
+	int validPlaneId = 0;
 	for (int i = 0; i < theClosestIds.size(); i++) {
 		for (int k = 0; k < 3; k++)
 			newpoint[k] = point[k] + theClosestDirections[i][k] * theClosestDistance;
@@ -160,13 +203,13 @@ int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, int id) {
 
 	for (int k = 0; k < 3; k++)
 		point[k] = newpoint[k];
-
+	
 	edgePartners[id].push(EdgePartnerTriple(theClosestIds[validPlaneId], intersectionLineDirections[validPlaneId], point, 0));
 	edgePartnerIds[id].push_back(theClosestIds[validPlaneId]);
 	edgePartnerIds[theClosestIds[validPlaneId]].push_back(id);
 	isKernelFace[id] = ProcessColor::WHITE;
 	isKernelFace[theClosestIds[validPlaneId]] = ProcessColor::WHITE;
-	
+
 	vector<int> parentIdsForNewVertex;
 	parentIdsForNewVertex.push_back(id);
 	parentIdsForNewVertex.push_back(theClosestIds[validPlaneId]);
@@ -181,6 +224,7 @@ int KernelExpansion_KerTrack::findTheClosestHalfSpace(double* point, int id) {
 	intersectionLineDirections.clear();
 
 	return validPlaneId;
+	*/
 }
 
 vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, double* lineDirection, int lineParent1Id, int lineParent2Id, double* newpoint) {
@@ -211,7 +255,7 @@ vector<int> KernelExpansion_KerTrack::findTheClosestHalfSpace(int vertexId, doub
 	for (int i = 0; i < 3; i++)
 		newpoint[i] = kernel.getVertex(vertexId).coords[i] + lineDirection[i] * theClosestDistance;
 	double t = findClosestValueSatisfiedByPoint(newpoint, halfSpaceSet);
-	if (t > EPSILON)
+	if (t > 3*EPSILON)
 		return theClosestIds;
 	
 	int startId = vertexId;
@@ -284,7 +328,10 @@ void KernelExpansion_KerTrack::orderTheFaces(int base_id, int partner_id, vector
 	for (int i = 0, j = 1; j < ordered_next_partner_ids.size(); j++) {
 		if (isWalkedEdge(ordered_next_partner_ids[i], ordered_next_partner_ids[j])) {
 			double edgeDirection[3];
-			findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, edgeDirection);	
+			if (i == 0)
+				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, edgeDirection, NULL);
+			else
+				findEdgeDirection(ordered_next_partner_ids[i], ordered_next_partner_ids[j], should_revert, edgeDirection, halfSpaceSet[base_id].ABCD);	
 			if (isValidEdge(startPoint, edgeDirection))
 				edgePartners[ordered_next_partner_ids[i]].push(EdgePartnerTriple(ordered_next_partner_ids[j], edgeDirection, startPoint, kernel.getNumOfVerts() - 1));
 			else
@@ -318,17 +365,22 @@ bool KernelExpansion_KerTrack::isWalkedEdge(int hs1_id, int hs2_id) {
 
 }
 
-void KernelExpansion_KerTrack::findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* edgeDirection) {
+void KernelExpansion_KerTrack::findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* edgeDirection, double* directioner) {
 
 	crossProduct(halfSpaceSet[hs1_id].ABCD, halfSpaceSet[hs2_id].ABCD, edgeDirection);
 	normalize(edgeDirection);
-	if (should_revert)
-		multVect(edgeDirection, -1.0, edgeDirection);
-
+	if (directioner) {
+		if (dotProduct(edgeDirection, directioner) > 0)
+			multVect(edgeDirection, -1.0, edgeDirection);
+	}
+	else {
+		if (should_revert)
+			multVect(edgeDirection, -1.0, edgeDirection);
+	}
 }
 
 bool KernelExpansion_KerTrack::isValidEdge(double* startPoint, double* edgeDirection) {
-
+	return true;
 	double testPoint[3];
 	for (int k = 0; k < 3; k++)
 		testPoint[k] = startPoint[k] + EPSILON * edgeDirection[k];
@@ -339,19 +391,42 @@ bool KernelExpansion_KerTrack::isValidEdge(double* startPoint, double* edgeDirec
 	
 }
 
-double* KernelExpansion_KerTrack::findInitialPoint_1() {
-		
+void KernelExpansion_KerTrack::findInitialPoint_1(double* point) {
+	
+	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), halfSpaceSet);
+	
+	this->initialPoint = new double[18];
+	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
+	for (int i = 0; i < 6; i++) {
+		double* extremePoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
+		if (extremePoint) {
+			for (int j = 0; j < 3; j++)
+				this->initialPoint[i * 3 + j] = extremePoint[j];
+			delete[] extremePoint;
+		}
+		else {
+			delete[] this->initialPoint;
+			this->initialPoint = nullptr;
+			break;
+		}
+
+	}
+
 	if (this->initialPoint) {
+		for (int i = 0; i < 3; i++)
+			point[i] = 0;
 		// find the center of the kernel's bonding box
-		double* point = new double[3]{ 0, 0, 0 };
 		for (int i = 0; i < 6; i++)
 			point[i / 2] += this->initialPoint[i * 3 + i / 2];
 		for (int i = 0; i < 3; i++)
 			point[i] /= 2.0;
-		return point;
 	}
-	return NULL;
+	else {
+		for (int i = 0; i < 3; i++)
+			point[i] = numeric_limits<double>::infinity();
+	}
 	
+	cout << point[0] << " " << point[1] << " " << point[2] << endl;
 }
 
 double* KernelExpansion_KerTrack::findInitialPoint_2() {
@@ -422,7 +497,7 @@ void KernelExpansion_KerTrack::findInitialPoint_3(double* point) {
 		for (int k = 0; k < 3; k++)
 			distance += halfSpaceSet[i].ABCD[k] * point[k];
 		// if distance > 0, then it means point does not satisfy the i'th halfspace
-		if (distance > 0) {
+		if (distance > 3*EPSILON) {
 			// project the point onto i'th plane, now it is the new point
 			for (int k = 0; k < 3; k++)
 				point[k] = -halfSpaceSet[i].ABCD[k] * distance + point[k];
@@ -436,7 +511,7 @@ void KernelExpansion_KerTrack::findInitialPoint_3(double* point) {
 				// if distance > 0, then it means that new point does not satisfy the j'th halfspace
 				// but the previous point was satisfying j'th half-space
 				// then we understand that j'th halfspace passes through between the previous point and the new point (current point)
-				if (distance > EPSILON) {
+				if (distance > 3*EPSILON) {
 					double lineDir[3], goingDir[3];
 					crossProduct(halfSpaceSet[j].ABCD, halfSpaceSet[i].ABCD, lineDir);
 					crossProduct(lineDir, halfSpaceSet[i].ABCD, goingDir);
@@ -457,7 +532,7 @@ void KernelExpansion_KerTrack::findInitialPoint_3(double* point) {
 						double distance = halfSpaceSet[m].ABCD[3];
 						for (int k = 0; k < 3; k++)
 							distance += halfSpaceSet[m].ABCD[k] * point[k];
-						if (distance > 0) {
+						if (distance > 3*EPSILON) {
 							for (int k = 0; k < 3; k++)
 								point[k] = numeric_limits<double>::infinity();
 							return;
