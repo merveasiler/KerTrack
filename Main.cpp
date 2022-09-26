@@ -10,13 +10,13 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
-		string command_type = "experiment";	// argv[1];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/liver.obj"; // argv[2];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/bot_eye.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/1777452.off";
-		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/vase/vase6.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/teddy.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
+		string command_type = "kertrack";	// argv[1];
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off"; // argv[2];
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/star.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/203289.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/spiral/spiral1.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/Banana.obj";
+		string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Horse/1.obj";
 
 		// DRAW:

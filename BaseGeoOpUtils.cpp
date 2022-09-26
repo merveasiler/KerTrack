@@ -348,6 +348,7 @@ bool isZeroVector(double* vect) {
 }
 
 bool isTripleSame(double* p1, double* p2) {
+
 	if (abs(p1[0] - p2[0]) < EPSILON && abs(p1[1] - p2[1]) < EPSILON && abs(p1[2] - p2[2]) < EPSILON)
 		return true;
 	return false;
