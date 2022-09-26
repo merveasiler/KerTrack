@@ -70,6 +70,9 @@
     <ClCompile Include="sdlp.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
+    <ClCompile Include="SphericalParametrization.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComputeKernelByCGAL.h">
@@ -116,6 +119,9 @@
     </ClInclude>
     <ClInclude Include="sdlp.h">
       <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="SphericalParametrization.h">
+      <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -39,6 +39,7 @@ public:
 	void getShapeSep(Mesh* mesh, vector<double*>& coveringNodes, vector<int*>& trisIds, vector<int>& numOfTrisPerNode, float radius, SoSeparator* res);
 	void getShapeSepByEdges(Mesh* mesh, MaterialSetting* materialSetting, SoSeparator* res);
 	void drawTriangulation(Mesh* mesh, SoSeparator* res);
+	void drawColorfulTriangulation(Mesh* mesh, SoSeparator* res);
 	void drawSingleTriangle(Mesh* mesh, Triangle* triangle, SoSeparator* res);
 	void drawNormal(Mesh* mesh, int triangle_id, SoSeparator* res);
 };

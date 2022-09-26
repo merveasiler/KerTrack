@@ -8,6 +8,7 @@ struct Vertex
 {
 	int idx;
 	double coords[3];
+	double color[3];	//rgb
 
 	// adjacencies
 	vector< int > vertList;

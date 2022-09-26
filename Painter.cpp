@@ -17,10 +17,8 @@ void Painter::getColorfulShapeSep(Mesh* mesh, SoSeparator* res, vector<double> c
 	SoCoordinate3* coords = new SoCoordinate3();
 	for (int c = 0; c < mesh->getNumOfVerts(); c++) {
 		coords->point.set1Value(c, mesh->getVertex(c).coords[0], mesh->getVertex(c).coords[1], mesh->getVertex(c).coords[2]);
-
-		// Paint all vertices with different color
-		//mat->diffuseColor.set1Value(c, 0, 0, 1.0);
-		mat->diffuseColor.set1Value(c, colorSource[c], 0, 1.0 - colorSource[c]);
+		mat->diffuseColor.set1Value(c, mesh->getVertex(c).color[0], mesh->getVertex(c).color[1], mesh->getVertex(c).color[2]);
+		//mat->diffuseColor.set1Value(c, colorSource[c], 0, 1.0 - colorSource[c]);
 	}
 
 	SoMaterialBinding* materialBinding = new SoMaterialBinding; //for 2+ diffuse color usage on the same mesh
@@ -109,7 +107,7 @@ void Painter::getShapeSep(double center[3], float radius, SoSeparator* res)
 {
 	// Paint all vertices with the same color
 	SoMaterial* mat = new SoMaterial();
-	mat->diffuseColor.setValue(1.0, 0, 0);
+	mat->diffuseColor.setValue(0.5, 0.5, 0.5);
 	mat->transparency = 0;
 	res->addChild(mat);
 
@@ -233,7 +231,7 @@ void Painter::drawTriangulation(Mesh* mesh, SoSeparator* res) {
 	SoSeparator* thickEdgeSep = new SoSeparator;
 	SoMaterial* ma = new SoMaterial;
 	//ma->diffuseColor.set1Value(0, 1.0, 0.4, 0.4);
-	ma->diffuseColor.set1Value(0, 0, 0, 1);
+	ma->diffuseColor.set1Value(0, 0, 0, 0);
 	thickEdgeSep->addChild(ma);
 	SoDrawStyle* sty = new SoDrawStyle;
 	sty->lineWidth = 1.0f;
@@ -259,6 +257,40 @@ void Painter::drawTriangulation(Mesh* mesh, SoSeparator* res) {
 	}
 
 	thickEdgeSep->addChild(co);
+	thickEdgeSep->addChild(ils);
+	res->addChild(thickEdgeSep);
+
+}
+
+void Painter::drawColorfulTriangulation(Mesh* mesh, SoSeparator* res) {
+
+	SoSeparator* thickEdgeSep = new SoSeparator;
+	SoMaterial* ma = new SoMaterial;
+	thickEdgeSep->addChild(ma);
+
+	SoCoordinate3* co = new SoCoordinate3();
+	for (int c = 0; c < mesh->getNumOfVerts(); c++) {
+		co->point.set1Value(c, mesh->getVertex(c).coords[0], mesh->getVertex(c).coords[1], mesh->getVertex(c).coords[2]);
+		ma->diffuseColor.set1Value(c, mesh->getVertex(c).color[0], mesh->getVertex(c).color[1], mesh->getVertex(c).color[2]);
+	}
+
+	SoMaterialBinding* materialBinding = new SoMaterialBinding; //for 2+ diffuse color usage on the same mesh
+	materialBinding->value = SoMaterialBinding::PER_VERTEX_INDEXED;
+	thickEdgeSep->addChild(materialBinding);
+	thickEdgeSep->addChild(co);
+
+	SoDrawStyle* sty = new SoDrawStyle;
+	sty->lineWidth = 1.0f;
+	thickEdgeSep->addChild(sty);
+	SoIndexedLineSet* ils = new SoIndexedLineSet;
+
+	for (int ci = 0; ci < mesh->getNumOfEdges(); ci++)
+	{
+		ils->coordIndex.set1Value(3 * ci, mesh->getEdge(ci).endVerts[0]);
+		ils->coordIndex.set1Value(3 * ci + 1, mesh->getEdge(ci).endVerts[1]);
+		ils->coordIndex.set1Value(3 * ci + 2, -1);
+	}
+
 	thickEdgeSep->addChild(ils);
 	res->addChild(thickEdgeSep);
 

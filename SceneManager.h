@@ -22,4 +22,4 @@ void drawMultipleScenes(vector<tuple<tuple<Mesh*, MaterialSetting*>, tuple<Mesh*
 
 void drawSegmentationToScene(Mesh* mesh, vector<double*>& coveringNodes, vector<int*>& trisIds, vector<int>& numOfTrisPerNode, float radius);
 
-void drawSphereOnMesh(Mesh* mesh, double center[3], float radius);
+void drawMeshOnSphere(Mesh* mesh, Mesh* originalMesh, double center[3], float radius);

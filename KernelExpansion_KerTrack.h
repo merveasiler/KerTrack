@@ -47,11 +47,6 @@ class KernelExpansion_KerTrack : public KernelExpansion {
 	bool isWalkedEdge(int hs1_id, int hs2_id);
 	void findEdgeDirection(int hs1_id, int hs2_id, bool should_revert, double* edgeDirection, double* directioner);
 	bool isValidEdge(double* startPoint, double* edgeDirection);
-	void findInitialPoint_1(double* point);
-	void findInitialPoint_2(double* point);
-	void findInitialPoint_3(double* point);
-	void findInitialPoint_4(double* point);
-	void findInitialPoint_5(double* point);
 	void filterRepetitions(double* distances, vector<double>& scalarsVector);
 	void filterRepetitions2(double* distances, vector<double>& scalarsVector);
 
@@ -59,4 +54,10 @@ public:
 	KernelExpansion_KerTrack(const Mesh& hostMesh);
 	~KernelExpansion_KerTrack();
 	void expandKernel();
+
+	void findInitialPoint_1(double* point);
+	void findInitialPoint_2(double* point);
+	void findInitialPoint_3(double* point);
+	void findInitialPoint_4(double* point);
+	void findInitialPoint_5(double* point);
 };

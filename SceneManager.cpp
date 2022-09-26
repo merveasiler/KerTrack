@@ -179,15 +179,18 @@ void drawSegmentationToScene(Mesh* mesh, vector<double*>& coveringNodes, vector<
 	delete painter;
 }
 
-void drawSphereOnMesh(Mesh* mesh, double center[3], float radius) {
+void drawMeshOnSphere(Mesh* mesh, Mesh* originalMesh, double center[3], float radius) {
 	Scene* scene = new Scene();
 	Painter* painter = new Painter();
 	SoSeparator* res1 = new SoSeparator();
-	painter->getShapeSep(center, radius, res1);
-
 	SoSeparator* res2 = new SoSeparator();
+	//painter->getShapeSep(center, radius, res1);
+	
+	vector<double> colorSource;
+	painter->getColorfulShapeSep(mesh, res2, colorSource);
+	painter->getColorfulShapeSep(originalMesh, res1, colorSource);
 	painter->drawTriangulation(mesh, res2);
-	//painter->getShapeSep(mesh, res2);
+	painter->drawTriangulation(originalMesh, res1);
 
 	vector<SoSeparator*> resSet;
 	resSet.push_back(res2);

@@ -165,10 +165,25 @@ int Mesh::makeVertsNeighbor(int v1i, int v2i)
 	return -1;
 }
 
+void Mesh::addVertexColor(int id, double color[3]) {
+
+	for (int i = 0; i < 3; i++)
+		this->verts[id].color[i] = color[i];
+
+}
+
+void Mesh::changeVertexCoords(int id, double coords[3]) {
+
+	for (int i = 0; i < 3; i++)
+		this->verts[id].coords[i] = coords[i];
+
+}
+
 Mesh::~Mesh()
 {
 	verts.clear();
 	tris.clear();
 	edges.clear();
 }
+
 

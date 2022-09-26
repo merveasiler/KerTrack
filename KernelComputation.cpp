@@ -7,6 +7,7 @@
 #include "KernelExpansion_MDFKer.h"
 #include "KernelExpansion_MDFKerPlus.h"
 */
+#include "SphericalParametrization.h"
 #include "KernelExpansion_KerTrack.h"
 #include "ComputeKernelByCGAL.h"
 #include "sdlp.h"
@@ -470,28 +471,24 @@ void SphericalParametrize(string meshName) {
 	else
 		mesh->loadObj(meshName.c_str());
 
-	double extremeDirection[3] = { 0, 0, 1 };
+	int resolution = 10;
+	float radius = 1.0;
+	double center[3];
+	KernelExpansion_KerTrack kt(*mesh);
+	kt.findInitialPoint_5(center);
+	Mesh* sphericalMesh = new Mesh();
+	parametrizeByKernel(mesh, sphericalMesh, center, radius, resolution);
 
+	/*
+	double extremeDirection[3] = { 0, 0, 1 };
 	double* kernelPoint = sdlpMain(*mesh, extremeDirection);
 	double* center = kernelPoint;
-	float radius = 1.0;
+	*/
 
-	// project mesh vertices onto the sphere
-	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-		Vertex v = mesh->getVertex(i);
-		double rayDirection[3];
-		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v.coords[j] - center[j];
-		normalize(rayDirection);
-		// new coordinates:
-		for (int j = 0; j < 3; j++)
-			v.coords[j] = center[j] + rayDirection[j] * radius;
-	}
+	drawMeshOnSphere(sphericalMesh, mesh, center, radius);
 
-	drawSphereOnMesh(mesh, center, radius);
-
-	delete[] center;
 	delete mesh;
+	delete sphericalMesh;
 }
 
 vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh) {

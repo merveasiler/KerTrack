@@ -42,6 +42,8 @@ public:
 	const vector<Edge>& getAllEdges() const { return edges; };
 
 	// methods to compute mesh features
+	void addVertexColor(int id, double color[3]);
+	void changeVertexCoords(int id, double coords[3]);
 	void computeTrisAngles();
 	double computeVolume();
 	void tetrahedralizeSurface();
