@@ -1,3 +1,5 @@
+// @author Merve Asiler
+
 #include "SphericalParametrization.h"
 
 void findBoundingBox(Mesh* mesh, double min[3], double max[3]) {
@@ -29,11 +31,11 @@ void computeColor(double coords[3], double min[3], double max[3], double color[3
 
 }
 
-void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], double radius, int resolution) {
+void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], double radius[1], int resolution) {
 
 	double min[3], max[3];
 	findBoundingBox(mesh, min, max);
-	radius = (max[0] - min[0]) / 2;
+	radius[0] = (max[0] - min[0]) / 2;
 
 	// project mesh vertices onto the sphere
 	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
@@ -45,7 +47,7 @@ void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], doub
 		// new coordinates:
 		double newcoords[3];
 		for (int j = 0; j < 3; j++)
-			newcoords[j] = center[j] + rayDirection[j] * radius;
+			newcoords[j] = center[j] + rayDirection[j] * radius[0];
 		sphericalMesh->addVertex(newcoords[0], newcoords[1], newcoords[2]);
 		double color[3];
 		computeColor(v.coords, min, max, color);
@@ -53,11 +55,12 @@ void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], doub
 		mesh->addVertexColor(i, color);
 	}
 
+	
 	for (int i = 0; i < mesh->getNumOfTris(); i++) {
 		Triangle t = mesh->getTriangle(i);
 		sphericalMesh->addTriangle(t.corners[0], t.corners[1], t.corners[2]);
 	}
-
+	
 	/*
 	for (int i = 0; i < mesh->getNumOfEdges(); i++) {
 		Edge e = mesh->getEdge(i);
@@ -97,10 +100,12 @@ void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], doub
 		}
 	}
 	*/
-	double width = max[0] - min[0] + 3.0;
+	
+	double width = max[0] - min[0] + 10.0;
+	double height = 10.0;
 	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
 		Vertex v = mesh->getVertex(i);
-		double coords[3] = { v.coords[0] + width, v.coords[1], v.coords[2] };
+		double coords[3] = { v.coords[0] - width, v.coords[1], v.coords[2] + height};
 		mesh->changeVertexCoords(i, coords);
 	}
 }

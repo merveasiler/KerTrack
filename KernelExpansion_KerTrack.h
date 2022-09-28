@@ -60,4 +60,5 @@ public:
 	void findInitialPoint_3(double* point);
 	void findInitialPoint_4(double* point);
 	void findInitialPoint_5(double* point);
+	void findInitialPoint_6(double* point);
 };

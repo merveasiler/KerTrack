@@ -43,7 +43,7 @@ void Painter::getShapeSep(Mesh* mesh, SoSeparator* res)
 {
 	// Paint all vertices with the same color
 	SoMaterial* mat = new SoMaterial();
-	mat->diffuseColor.setValue(1, 1, 1);
+	mat->diffuseColor.setValue(0.5, 0.5, 0.5);
 	mat->transparency = 0;
 	res->addChild(mat);
 
@@ -231,10 +231,10 @@ void Painter::drawTriangulation(Mesh* mesh, SoSeparator* res) {
 	SoSeparator* thickEdgeSep = new SoSeparator;
 	SoMaterial* ma = new SoMaterial;
 	//ma->diffuseColor.set1Value(0, 1.0, 0.4, 0.4);
-	ma->diffuseColor.set1Value(0, 0, 0, 0);
+	ma->diffuseColor.set1Value(0, 1.0, 0, 0);
 	thickEdgeSep->addChild(ma);
 	SoDrawStyle* sty = new SoDrawStyle;
-	sty->lineWidth = 1.0f;
+	sty->lineWidth = 3.0f;
 	thickEdgeSep->addChild(sty);
 
 	SoIndexedLineSet* ils = new SoIndexedLineSet;

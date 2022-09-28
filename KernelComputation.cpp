@@ -8,6 +8,7 @@
 #include "KernelExpansion_MDFKerPlus.h"
 */
 #include "SphericalParametrization.h"
+#include "ShapeMorphing.h"
 #include "KernelExpansion_KerTrack.h"
 #include "ComputeKernelByCGAL.h"
 #include "sdlp.h"
@@ -472,12 +473,19 @@ void SphericalParametrize(string meshName) {
 		mesh->loadObj(meshName.c_str());
 
 	int resolution = 10;
-	float radius = 1.0;
-	double center[3];
+	double radius[1] = { 1.0 };
+	
+	double center[3] = { 0, 0, 0 };
 	KernelExpansion_KerTrack kt(*mesh);
-	kt.findInitialPoint_5(center);
-	Mesh* sphericalMesh = new Mesh();
-	parametrizeByKernel(mesh, sphericalMesh, center, radius, resolution);
+	//kt.findInitialPoint_5(center);
+	kt.expandKernel();
+	Mesh& kernel = kt.getKernel();
+	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
+		for (int k = 0; k < 3; k++)
+			center[k] += kernel.getVertex(i).coords[k];
+	}
+	for (int k = 0; k < 3; k++)
+		center[k] /= kernel.getNumOfVerts();
 
 	/*
 	double extremeDirection[3] = { 0, 0, 1 };
@@ -485,10 +493,34 @@ void SphericalParametrize(string meshName) {
 	double* center = kernelPoint;
 	*/
 
-	drawMeshOnSphere(sphericalMesh, mesh, center, radius);
+	Mesh* sphericalMesh = new Mesh();
+	parametrizeByKernel(mesh, sphericalMesh, center, radius, resolution);
+	drawMeshOnSphere(sphericalMesh, mesh, center, radius[0]);
 
 	delete mesh;
 	delete sphericalMesh;
+}
+
+void ShapeMorph(string sourceMeshName, string targetMeshName) {
+
+	Mesh* sourceMesh = new Mesh();
+	Mesh* targetMesh = new Mesh();
+
+	if (sourceMeshName.substr(sourceMeshName.length() - 3, 3) == "off")
+		sourceMesh->loadOff(sourceMeshName.c_str());
+	else
+		sourceMesh->loadObj(sourceMeshName.c_str());
+	
+	if (targetMeshName.substr(targetMeshName.length() - 3, 3) == "off")
+		targetMesh->loadOff(targetMeshName.c_str());
+	else
+		targetMesh->loadObj(targetMeshName.c_str());
+
+
+	morphByKernel(sourceMesh, targetMesh);
+
+	delete sourceMesh;
+	delete targetMesh;
 }
 
 vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh) {

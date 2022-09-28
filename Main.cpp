@@ -10,14 +10,16 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
-		string command_type = "sp";	// argv[1];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off"; // argv[2];
+		string command_type = "sm";	// argv[1];
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/325.off"; // argv[2];
 		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/203289.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/spiral/spiral1.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/Banana.obj";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Horse/1.obj";
+		string source_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
+		string target_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
 
 		// DRAW:
 		// Example:	draw C:/Users/Merve/3D_DATABASES/DB_Kids/method_alexa/11to15at0.5.off
@@ -68,6 +70,11 @@ int main(int argc, char* argv[])
 		// Example: sp C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Rock_6.obj
 		else if (command_type == "sp")
 			SphericalParametrize(shape_path);
+
+		// APPLY SHAPE MORPH by INTERPOLATING VERTEX ANGLES AND DIRECTIONS FROM A KERNEL POINT
+		// Example: sm C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Rock_6.obj C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/liver.obj
+		else if (command_type == "sm")
+			ShapeMorph(source_path, target_path);
 
 		// EXTRACT CONVEX HULL OF MESH
 		// Example:	convexhull C:/Users/Merve/3D_DATABASES/DB_FaustRegistrations/tr_reg_000.off

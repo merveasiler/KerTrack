@@ -184,17 +184,25 @@ void drawMeshOnSphere(Mesh* mesh, Mesh* originalMesh, double center[3], float ra
 	Painter* painter = new Painter();
 	SoSeparator* res1 = new SoSeparator();
 	SoSeparator* res2 = new SoSeparator();
-	//painter->getShapeSep(center, radius, res1);
+	SoSeparator* res3 = new SoSeparator();
 	
 	vector<double> colorSource;
-	painter->getColorfulShapeSep(mesh, res2, colorSource);
-	painter->getColorfulShapeSep(originalMesh, res1, colorSource);
-	painter->drawTriangulation(mesh, res2);
-	painter->drawTriangulation(originalMesh, res1);
+	
+	painter->getShapeSep(mesh, res2);
+	painter->getShapeSep(originalMesh, res1);
+	//painter->drawTriangulation(mesh, res2);
+	//painter->drawTriangulation(originalMesh, res1);
+	
+	//painter->getColorfulShapeSep(mesh, res2, colorSource);
+	//painter->getColorfulShapeSep(originalMesh, res1, colorSource);
+	painter->drawColorfulTriangulation(mesh, res2);
+	painter->drawColorfulTriangulation(originalMesh, res1);
+	//painter->getShapeSep(center, radius, res2);
 
 	vector<SoSeparator*> resSet;
 	resSet.push_back(res2);
 	resSet.push_back(res1);
+	resSet.push_back(res3);
 	scene->makeScene(resSet);
 
 	resSet.clear();

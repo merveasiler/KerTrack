@@ -159,6 +159,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="sdlp.cpp" />
+    <ClCompile Include="ShapeMorhing.cpp" />
     <ClCompile Include="SphericalParametrization.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,6 +178,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="sdlp.h" />
+    <ClInclude Include="ShapeMorhing.h" />
     <ClInclude Include="SphericalParametrization.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
