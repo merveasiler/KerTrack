@@ -516,11 +516,40 @@ void ShapeMorph(string sourceMeshName, string targetMeshName) {
 	else
 		targetMesh->loadObj(targetMeshName.c_str());
 
+	int numOfInterShapes = 3;
+	vector<Mesh*> intershapes;
+	for (int i = 0; i < numOfInterShapes; i++)
+		intershapes.push_back(new Mesh());
 
-	morphByKernel(sourceMesh, targetMesh);
+	// center of the kernel of source mesh
+	KernelExpansion_KerTrack ktSource(*sourceMesh);
+	ktSource.expandKernel();
+	Mesh& kernelSource = ktSource.getKernel();
+	double centerSource[3];
+	for (int i = 0; i < kernelSource.getNumOfVerts(); i++) {
+		for (int k = 0; k < 3; k++)
+			centerSource[k] += kernelSource.getVertex(i).coords[k];
+	}
+	for (int k = 0; k < 3; k++)
+		centerSource[k] /= kernelSource.getNumOfVerts();
+
+	// center of the kernel of target mesh
+	KernelExpansion_KerTrack ktTarget(*targetMesh);
+	ktTarget.expandKernel();
+	Mesh& kernelTarget = ktTarget.getKernel();
+	double centerTarget[3];
+	for (int i = 0; i < kernelTarget.getNumOfVerts(); i++) {
+		for (int k = 0; k < 3; k++)
+			centerTarget[k] += kernelTarget.getVertex(i).coords[k];
+	}
+	for (int k = 0; k < 3; k++)
+		centerTarget[k] /= kernelTarget.getNumOfVerts();
+
+	morphByKernel(sourceMesh, targetMesh, intershapes, centerSource, centerTarget);
+	drawMeshToScene(intershapes[2]);
 
 	delete sourceMesh;
-	delete targetMesh;
+	delete targetMesh;	
 }
 
 vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh) {

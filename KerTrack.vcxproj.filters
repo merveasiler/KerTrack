@@ -73,7 +73,7 @@
     <ClCompile Include="SphericalParametrization.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
-    <ClCompile Include="ShapeMorhing.cpp">
+    <ClCompile Include="ShapeMorphing.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -126,7 +126,7 @@
     <ClInclude Include="SphericalParametrization.h">
       <Filter>Controllers</Filter>
     </ClInclude>
-    <ClInclude Include="ShapeMorhing.h">
+    <ClInclude Include="ShapeMorphing.h">
       <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>

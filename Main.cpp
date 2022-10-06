@@ -11,21 +11,30 @@ int main(int argc, char* argv[])
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
 		string command_type = "sm";	// argv[1];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/325.off"; // argv[2];
-		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/203289.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/spiral/spiral1.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/Banana.obj";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off"; // argv[2];
+		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/1777452.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/vase/vase6.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/teddy.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Horse/1.obj";
-		string source_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
-		string target_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/acorn.off";
+
+		//string source_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off";
+		//string target_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350_rotated.off";
+		string source_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball.off";
+		string target_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball_rotated.off";
 
 		// DRAW:
 		// Example:	draw C:/Users/Merve/3D_DATABASES/DB_Kids/method_alexa/11to15at0.5.off
 		//			draw C:/Users/Merve/3D_DATABASES/DB_Camel/camel-02.obj
 		if (command_type == "draw")
 			drawMeshToScene(shape_path);
+
+		// DRAW:
+		// Example:	draw C:/Users/Merve/3D_DATABASES/DB_Kids/method_alexa/11to15at0.5.off
+		//			draw C:/Users/Merve/3D_DATABASES/DB_Camel/camel-02.obj
+		else if (command_type == "rotate")
+			drawRotatedMeshToScene(shape_path);
 
 		// COMPARE KERNEL RESULTS for CGAL & MDF-Ker-Plus & SDF-Ker-Plus
 		else if (command_type == "experiment")

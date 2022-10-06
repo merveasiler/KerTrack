@@ -14,6 +14,8 @@ void drawDoubleMeshToScene(Mesh* mesh1, Mesh* mesh2, vector<double> colorSource)
 
 void drawMeshToScene(string meshName);
 
+void drawRotatedMeshToScene(string meshName);
+
 void drawMultipleMeshToScene(vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set);
 
 void drawNextToNextSketchToScene(vector<tuple<tuple<Mesh*, MaterialSetting*>, tuple<Mesh*, MaterialSetting*>>> mesh_mat_tuple_set);
