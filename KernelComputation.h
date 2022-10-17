@@ -29,5 +29,9 @@ void FindKernelPoint_SDLP(string meshName);
 
 void SphericalParametrize(string meshName);
 
-void ShapeMorph(string sourceMeshName, string targetMeshName);
+void ShapeMorphByKernel(string sourceMeshName, string targetMeshName);
+
+void ShapeMorphByLerp(string sourceMeshName, string targetMeshName);
+
+
 

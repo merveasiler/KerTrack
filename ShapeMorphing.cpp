@@ -2,255 +2,130 @@
 
 #include "ShapeMorphing.h"
 
+double computeWidth(Mesh* mesh) {
+
+	double min_x = numeric_limits<double>::infinity();
+	double max_x = -numeric_limits<double>::infinity();
+	for (int j = 0; j < mesh->getNumOfVerts(); j++) {
+		if (mesh->getVertex(j).coords[0] < min_x)
+			min_x = mesh->getVertex(j).coords[0];
+		if (mesh->getVertex(j).coords[0] > max_x)
+			max_x = mesh->getVertex(j).coords[0];
+	}
+	
+	return max_x - min_x;
+
+}
+
 void morphByKernel(Mesh* sourceMesh, Mesh* targetMesh, vector<Mesh*>& interMeshes, double centerSource[3], double centerTarget[3]) {
+
+	double meshWidth = computeWidth(sourceMesh);
+	double breakWidth = meshWidth;
 
 	double time_step = 1.0 / (interMeshes.size() + 1);
-	double refDir[3] = { 0, 0, 1 };
+	// compute translation first
+	double translation[3];
+	for (int i = 0; i < 3; i++)
+		translation[i] = centerTarget[i] - centerSource[i];
+	interMeshes.push_back(new Mesh());	// recompute targetMesh
 
-	// define source mesh vertices w.r.t. center of the kernel
-	vector <double*> directions_distances_source;
+	// define source and target mesh vertices w.r.t. center of their kernels
+	vector <double*> distance_vectors_source, distance_vectors_target;
+	vector<double> angles;
 	for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
-		Vertex v = sourceMesh->getVertex(i);
-		double* rayDirection = new double[4];
-		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v.coords[j] - centerSource[j];
-		rayDirection[3] = computeLength(rayDirection);	// only for the first 3 elements
-		normalize(rayDirection);						// only for the first 3 elements
-		directions_distances_source.push_back(rayDirection);
-	}
+		Vertex vs = sourceMesh->getVertex(i);
+		Vertex vt = targetMesh->getVertex(i);
 
-	// define target mesh vertices w.r.t. center of the kernel
-	vector <double*> directions_distances_target;
-	for (int i = 0; i < targetMesh->getNumOfVerts(); i++) {
-		Vertex v = targetMesh->getVertex(i);
-		double* rayDirection = new double[4];
-		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v.coords[j] - centerTarget[j];
-		rayDirection[3] = computeLength(rayDirection);	// only for the first 3 elements
-		normalize(rayDirection);						// only for the first 3 elements
-		directions_distances_target.push_back(rayDirection);
+		double* ray_dir_source = new double[4];
+		double* ray_dir_target = new double[4];
+		for (int j = 0; j < 3; j++) {
+			ray_dir_source[j] = vs.coords[j] - centerSource[j];
+			ray_dir_target[j] = vt.coords[j] - centerTarget[j];
+		}
+
+		ray_dir_source[3] = computeLength(ray_dir_source);	// only for the first 3 elements
+		ray_dir_target[3] = computeLength(ray_dir_target);	// only for the first 3 elements
+		normalize(ray_dir_source);							// only for the first 3 elements
+		normalize(ray_dir_target);							// only for the first 3 elements
+
+		distance_vectors_source.push_back(ray_dir_source);
+		distance_vectors_target.push_back(ray_dir_target);
+		
+		double cosAngle = dotProduct(ray_dir_source, ray_dir_target);
+		angles.push_back(acos(cosAngle));
+		//angles.push_back(0);
 	}
 
 	// interpolate
-	vector<double> angleDiffs, distanceDiffs;
-	for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
-		// angle
-		double* sourceDir = directions_distances_source[i];
-		double* targetDir = directions_distances_target[i];
-
-
-		double cosAngle = dotProduct(sourceDir, targetDir);
-		double angle = acos(cosAngle), totalAngleDiff;
-		double* axis1 = crossProduct(refDir, sourceDir);
-		double* axis2 = crossProduct(refDir, targetDir);
-		normalize(axis1);
-		normalize(axis2);
-		double s = dotProduct(axis1, axis2);
-		if (s < 0)
-			totalAngleDiff = angle;
-		else 
-			totalAngleDiff = 2 * PI - angle;
-
-		double angleDiff = time_step * totalAngleDiff;
-		angleDiffs.push_back(angleDiff);
-
-		double totalDistanceDiff = directions_distances_target[i][3] - directions_distances_source[i][3];
-		double distanceDiff = time_step * totalDistanceDiff;
-		distanceDiffs.push_back(distanceDiff);
-	}
-
-	double translation[3], centerDiff[3];
-	for (int i = 0; i < 3; i++) {
-		centerDiff[i] = centerTarget[i] - centerSource[i];
-		centerDiff[i] *= time_step;
-	}
-
-	// construct intermediate meshes
 	for (int m = 0; m < interMeshes.size(); m++) {
 		Mesh* mesh = interMeshes[m];
-		double main_time_step = m + 1;
-		for (int v = 0; v < sourceMesh->getNumOfVerts(); v++) {
+		double time = time_step * (m + 1);
 
-			double* sourceDir = directions_distances_source[v];
-			double* targetDir = directions_distances_target[v];
+		for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
+			// angle
+			double* sourceDir = distance_vectors_source[i];
+			double* targetDir = distance_vectors_target[i];
+			double angle = angles[i];
 
-			double* axis = crossProduct(sourceDir, targetDir);
-			double s = computeLength(axis);
-			double angle = main_time_step * angleDiffs[v];
-			double Vx[3][3] = { {0, -axis[2], axis[1]},
-								{axis[2], 0, -axis[0]},
-								{-axis[1], axis[0], 0} };
+			double sourceCoeff = sin((1.0 - time) * angle) / sin(angle);
+			double targetCoeff = sin(time * angle) / sin(angle);
 
-			double toplam[3][3] = { {1, -axis[2], axis[1]},
-								{axis[2], 1, -axis[0]},
-								{-axis[1], axis[0], 1} };
+			double point_on_sphere[3], direction[3];
+			for (int k = 0; k < 3; k++) {
+				point_on_sphere[k] = (centerSource[k] + sourceDir[k]) * sourceCoeff + (centerTarget[k] + targetDir[k]) * targetCoeff;
+				direction[k] = point_on_sphere[k] - centerTarget[k];
+			}
+			normalize(direction);
 
-			double Vx2[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+			double totalDistanceDiff = distance_vectors_target[i][3] - distance_vectors_source[i][3];
+			double distance = time * totalDistanceDiff;
 
-			for (int k = 0; k < 3; k++)
-				for (int i = 0; i < 3; i++)
-					for (int j = 0; j < 3; j++)
-						Vx2[k][j] += Vx[k][i] * Vx[i][j];
-
-			double cosAngle = cos(angle);
-			double coeff = (1.0 - cosAngle) / (s * s);
-			for (int i = 0; i < 3; i++)
-				for (int j = 0; j < 3; j++)
-					Vx2[i][j] *= coeff;
-
-			double R[3][3];
-			for (int i = 0; i < 3; i++)
-				for (int j = 0; j < 3; j++)
-					R[i][j] = toplam[i][j] + Vx2[i][j];
-
-			double dir[3] = { 0, 0, 0 };
-			for (int i = 0; i < 3; i++)
-				for (int j = 0; j < 3; j++)
-					dir[i] += R[i][j] * sourceDir[j];
-
-			normalize(dir);
-			double distance = sourceDir[3] + main_time_step * distanceDiffs[v];
-
-			double coords[3];
-			for (int i = 0; i < 3; i++)
-				coords[i] = centerDiff[i] * main_time_step + centerSource[i] + dir[i] * distance;
-
-			mesh->addVertex(coords[0], coords[1], coords[2]);
+			double center[3], point[3];
+			for (int k = 0; k < 3; k++) {
+				center[k] = centerSource[k] + time * translation[k];
+				point[k] = center[k] + direction[k] * (distance + distance_vectors_source[i][3]);
+			}
+			mesh->addVertex(point[0] + ((meshWidth + breakWidth) * (m + 1)), point[1], point[2]);
 		}
-
-		for (int t = 0; t < sourceMesh->getNumOfVerts(); t++) {
-			Triangle triangle = sourceMesh->getTriangle(t);
-			mesh->addTriangle(triangle.corners[0], triangle.corners[1], triangle.corners[2]);
-		}
-
-	}
-
-}
-
-
-
-/*
-void morphByKernel(Mesh* sourceMesh, Mesh* targetMesh, vector<Mesh*>& interMeshes, double centerSource[3], double centerTarget[3]) {
-
-	double time_step = 1.0 / (interMeshes.size()+1);
-	double refDir[3] = { 0, 0, 1 };
 	
-	// define source mesh vertices w.r.t. center of the kernel
-	vector <double*> directions_distances_source;
-	for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
-		Vertex v = sourceMesh->getVertex(i);
-		double* rayDirection = new double[4];
-		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v.coords[j] - centerSource[j];
-		rayDirection[3] = computeLength(rayDirection);	// only for the first 3 elements
-		normalize(rayDirection);						// only for the first 3 elements
-		directions_distances_source.push_back(rayDirection);
-	}
-
-	// define target mesh vertices w.r.t. center of the kernel
-	vector <double*> directions_distances_target;
-	for (int i = 0; i < targetMesh->getNumOfVerts(); i++) {
-		Vertex v = targetMesh->getVertex(i);
-		double* rayDirection = new double[4];
-		for (int j = 0; j < 3; j++)
-			rayDirection[j] = v.coords[j] - centerTarget[j];
-		rayDirection[3] = computeLength(rayDirection);	// only for the first 3 elements
-		normalize(rayDirection);						// only for the first 3 elements
-		directions_distances_target.push_back(rayDirection);
-	}
-
-	// interpolate
-	vector<double> angleDiffs, distanceDiffs;
-	for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
-		// angle
-		double* sourceDir = directions_distances_source[i];
-		double* targetDir = directions_distances_target[i];
-		
-		double cosAngle = dotProduct(sourceDir, targetDir);
-		double angle = acos(cosAngle), totalAngleDiff;
-		double* cross = crossProduct(sourceDir, targetDir);
-		double sinAngle = computeLength(cross);
-		if (sinAngle > 0)
-			totalAngleDiff = angle;
-		else if (cosAngle > 0)
-			totalAngleDiff = 2 * PI - angle;
-		else
-			totalAngleDiff = (PI - angle) + PI;
-		
-		double angleDiff = time_step * totalAngleDiff;
-		angleDiffs.push_back(angleDiff);
-
-		double totalDistanceDiff = directions_distances_target[i][3] - directions_distances_source[i][3];
-		double distanceDiff = time_step * totalDistanceDiff;
-		distanceDiffs.push_back(distanceDiff);
-	}
-
-	double translation[3], centerDiff[3];
-	for (int i = 0; i < 3; i++) {
-		centerDiff[i] = centerTarget[i] - centerSource[i];
-		centerDiff[i] *= time_step;
-	}
-
-	// construct intermediate meshes
-	for (int m = 0; m < interMeshes.size(); m++) {
-		Mesh* mesh = interMeshes[m];
-		double main_time_step = m + 1;
-		for (int v = 0; v < sourceMesh->getNumOfVerts(); v++) {
-		
-			double* sourceDir = directions_distances_source[v];
-			double* targetDir = directions_distances_target[v];
-
-			double* axis = crossProduct(sourceDir, targetDir);
-			double s = computeLength(axis);
-			double angle = main_time_step * angleDiffs[v];
-			double Vx[3][3] = { {0, -axis[2], axis[1]},
-								{axis[2], 0, -axis[0]},
-								{-axis[1], axis[0], 0} };
-
-			double toplam[3][3] = { {1, -axis[2], axis[1]},
-								{axis[2], 1, -axis[0]},
-								{-axis[1], axis[0], 1} };
-
-			double Vx2[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
-
-			for (int k = 0; k < 3; k++)
-				for (int i = 0; i < 3; i++)
-					for (int j = 0; j < 3; j++)
-						Vx2[k][j] += Vx[k][i] * Vx[i][j];
-
-			double cosAngle = cos(angle);
-			double coeff = (1.0 - cosAngle) / (s * s);
-			for (int i = 0; i < 3; i++) 
-				for (int j = 0; j < 3; j++)
-					Vx2[i][j] *= coeff;
-
-			double R[3][3];
-			for (int i = 0; i < 3; i++)
-				for (int j = 0; j < 3; j++)
-					R[i][j] = toplam[i][j] + Vx2[i][j];
-
-			double dir[3] = { 0, 0, 0 };
-			for (int i = 0; i < 3; i++)
-				for (int j = 0; j < 3; j++)
-					dir[i] += R[i][j] * sourceDir[j];
-
-			normalize(dir);
-			double distance = sourceDir[3] + main_time_step * distanceDiffs[v];
-
-			double coords[3];
-			for (int i = 0; i < 3; i++)
-				coords[i] = centerDiff[i] * main_time_step + centerSource[i] + dir[i] * distance;
-
-			mesh->addVertex(coords[0], coords[1], coords[2]);
-		}
-
-		for (int t = 0; t < sourceMesh->getNumOfVerts(); t++) {
+		for (int t = 0; t < sourceMesh->getNumOfTris(); t++) {
 			Triangle triangle = sourceMesh->getTriangle(t);
 			mesh->addTriangle(triangle.corners[0], triangle.corners[1], triangle.corners[2]);
 		}
-
 	}
 
 }
-*/
 
+void morphByLerp(Mesh* sourceMesh, Mesh* targetMesh, vector<Mesh*>& interMeshes) {
+
+	double meshWidth = computeWidth(sourceMesh);
+	double breakWidth = meshWidth;
+	double time_step = 1.0 / (interMeshes.size() + 1);
+	interMeshes.push_back(new Mesh());	// recompute targetMesh
+
+	for (int m = 0; m < interMeshes.size(); m++) {
+		Mesh* mesh = interMeshes[m];
+		double time = time_step * (m + 1);
+
+		for (int i = 0; i < sourceMesh->getNumOfVerts(); i++) {
+			Vertex vs = sourceMesh->getVertex(i);
+			Vertex vt = targetMesh->getVertex(i);
+
+			double distance[3];
+			for (int k = 0; k < 3; k++)
+				distance[k] = vt.coords[k] - vs.coords[k];
+
+			double point[3];
+			for (int k = 0; k < 3; k++)
+				point[k] = vs.coords[k] + distance[k] * time;
+
+			mesh->addVertex(point[0] + ((meshWidth + breakWidth) * (m + 1)), point[1], point[2]);
+		}
+
+		for (int t = 0; t < sourceMesh->getNumOfTris(); t++) {
+			Triangle triangle = sourceMesh->getTriangle(t);
+			mesh->addTriangle(triangle.corners[0], triangle.corners[1], triangle.corners[2]);
+		}
+	}
+
+}

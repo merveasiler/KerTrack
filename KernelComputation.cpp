@@ -20,6 +20,7 @@
 
 /* ***************************** GLOBAL VARIABLES ***************************** */
 /* */ vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh);
+/* */ void computeCenterOfKernel(Mesh* mesh, double center[3]);
 /* */ string fileNames[9] = {"321.off", "325.off", "326.off", "350.off", "cube.off", "cube_broken.off", "liver.obj", "Rock_2.obj", "Rock_6.obj"};
 /* */ double extremeDirections[6][3] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
 /* */ double cellSizeRatios[9][4] = {{0.07, 0.05, 0.035, 0.01}, {0.07, 0.05, 0.035, 0.01}, {0.07, 0.05, 0.035, 0.01}, {0.01, 0.005, 0.0045, 0.0025},
@@ -475,17 +476,8 @@ void SphericalParametrize(string meshName) {
 	int resolution = 10;
 	double radius[1] = { 1.0 };
 	
-	double center[3] = { 0, 0, 0 };
-	KernelExpansion_KerTrack kt(*mesh);
-	//kt.findInitialPoint_5(center);
-	kt.expandKernel();
-	Mesh& kernel = kt.getKernel();
-	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
-		for (int k = 0; k < 3; k++)
-			center[k] += kernel.getVertex(i).coords[k];
-	}
-	for (int k = 0; k < 3; k++)
-		center[k] /= kernel.getNumOfVerts();
+	double center[3];
+	computeCenterOfKernel(mesh, center);
 
 	/*
 	double extremeDirection[3] = { 0, 0, 1 };
@@ -501,7 +493,7 @@ void SphericalParametrize(string meshName) {
 	delete sphericalMesh;
 }
 
-void ShapeMorph(string sourceMeshName, string targetMeshName) {
+void ShapeMorphByKernel(string sourceMeshName, string targetMeshName) {
 
 	Mesh* sourceMesh = new Mesh();
 	Mesh* targetMesh = new Mesh();
@@ -516,40 +508,80 @@ void ShapeMorph(string sourceMeshName, string targetMeshName) {
 	else
 		targetMesh->loadObj(targetMeshName.c_str());
 
-	int numOfInterShapes = 3;
-	vector<Mesh*> intershapes;
-	for (int i = 0; i < numOfInterShapes; i++)
-		intershapes.push_back(new Mesh());
+	int numOfInterMeshes = 5;
+	vector<Mesh*> interMeshes;
+	for (int i = 0; i < numOfInterMeshes; i++)
+		interMeshes.push_back(new Mesh());
 
-	// center of the kernel of source mesh
-	KernelExpansion_KerTrack ktSource(*sourceMesh);
-	ktSource.expandKernel();
-	Mesh& kernelSource = ktSource.getKernel();
-	double centerSource[3];
-	for (int i = 0; i < kernelSource.getNumOfVerts(); i++) {
-		for (int k = 0; k < 3; k++)
-			centerSource[k] += kernelSource.getVertex(i).coords[k];
-	}
-	for (int k = 0; k < 3; k++)
-		centerSource[k] /= kernelSource.getNumOfVerts();
+	double centerSource[3] = { 0, 0, 0 };
+	double centerTarget[3] = { 0, 0, 0 };
+	//double centerSource[3], centerTarget[3];
+	//computeCenterOfKernel(sourceMesh, centerSource);
+	//computeCenterOfKernel(targetMesh, centerTarget);
+	
+	morphByKernel(sourceMesh, targetMesh, interMeshes, centerSource, centerTarget);
 
-	// center of the kernel of target mesh
-	KernelExpansion_KerTrack ktTarget(*targetMesh);
-	ktTarget.expandKernel();
-	Mesh& kernelTarget = ktTarget.getKernel();
-	double centerTarget[3];
-	for (int i = 0; i < kernelTarget.getNumOfVerts(); i++) {
-		for (int k = 0; k < 3; k++)
-			centerTarget[k] += kernelTarget.getVertex(i).coords[k];
-	}
-	for (int k = 0; k < 3; k++)
-		centerTarget[k] /= kernelTarget.getNumOfVerts();
+	vector<tuple<Mesh*, MaterialSetting*>> outputs;
+	MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0);
+	outputs.push_back(make_tuple(sourceMesh, meshMatSetting));
+	for (int i = 0; i < interMeshes.size(); i++)
+		outputs.push_back(make_tuple(interMeshes[i], meshMatSetting));
 
-	morphByKernel(sourceMesh, targetMesh, intershapes, centerSource, centerTarget);
-	drawMeshToScene(intershapes[2]);
+	drawMultipleMeshToScene(outputs);
 
 	delete sourceMesh;
 	delete targetMesh;	
+}
+
+void ShapeMorphByLerp(string sourceMeshName, string targetMeshName) {
+
+	Mesh* sourceMesh = new Mesh();
+	Mesh* targetMesh = new Mesh();
+
+	if (sourceMeshName.substr(sourceMeshName.length() - 3, 3) == "off")
+		sourceMesh->loadOff(sourceMeshName.c_str());
+	else
+		sourceMesh->loadObj(sourceMeshName.c_str());
+
+	if (targetMeshName.substr(targetMeshName.length() - 3, 3) == "off")
+		targetMesh->loadOff(targetMeshName.c_str());
+	else
+		targetMesh->loadObj(targetMeshName.c_str());
+
+	int numOfInterMeshes = 5;
+	vector<Mesh*> interMeshes;
+	for (int i = 0; i < numOfInterMeshes; i++)
+		interMeshes.push_back(new Mesh());
+
+	morphByLerp(sourceMesh, targetMesh, interMeshes);
+
+	vector<tuple<Mesh*, MaterialSetting*>> outputs;
+	MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0);
+	outputs.push_back(make_tuple(sourceMesh, meshMatSetting));
+	for (int i = 0; i < interMeshes.size(); i++)
+		outputs.push_back(make_tuple(interMeshes[i], meshMatSetting));
+
+	drawMultipleMeshToScene(outputs);
+
+	delete sourceMesh;
+	delete targetMesh;
+}
+
+void computeCenterOfKernel(Mesh* mesh, double center[3]) {
+
+	KernelExpansion_KerTrack kt(*mesh);
+	kt.expandKernel();
+	Mesh& kernel = kt.getKernel();
+
+	for (int k = 0; k < 3; k++)
+		center[k] = 0;
+	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
+		for (int k = 0; k < 3; k++)
+			center[k] += kernel.getVertex(i).coords[k];
+	}
+	for (int k = 0; k < 3; k++)
+		center[k] /= kernel.getNumOfVerts();
+
 }
 
 vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh) {

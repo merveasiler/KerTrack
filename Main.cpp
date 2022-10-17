@@ -11,22 +11,25 @@ int main(int argc, char* argv[])
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
 		string command_type = "sm";	// argv[1];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off"; // argv[2];
-		string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Thingi/1777452.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Refinements/vase/vase6.off";
+		string shape_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle.off"; // argv[2];
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1.obj";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/ball.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi/1777452.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Refinements/vase/vase6.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/teddy.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Kids/0001.isometry.1.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB_Horse/1.obj";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Kids/0001.isometry.1.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Horse/1.obj";
 
-		//string source_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350.off";
-		//string target_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/350_rotated.off";
-		string source_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball.off";
-		string target_path = "D:/VS_Workspace/3D_Databases/DB_ItalianStarShapes/Complex_Models/ball_rotated.off";
+		string source_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle.off";
+		string target_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle_rotated.off";
+		//string source_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1.obj";
+		//string target_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1_rotated.off";
+		//string source_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star.off";
+		//string target_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star_rotated.off";
 
 		// DRAW:
-		// Example:	draw C:/Users/Merve/3D_DATABASES/DB_Kids/method_alexa/11to15at0.5.off
-		//			draw C:/Users/Merve/3D_DATABASES/DB_Camel/camel-02.obj
+		// Example:	draw C:/Users/Merve/3D_DATABASES/DB-Kids/method_alexa/11to15at0.5.off
+		//			draw C:/Users/Merve/3D_DATABASES/DB-Camel/camel-02.obj
 		if (command_type == "draw")
 			drawMeshToScene(shape_path);
 
@@ -83,7 +86,12 @@ int main(int argc, char* argv[])
 		// APPLY SHAPE MORPH by INTERPOLATING VERTEX ANGLES AND DIRECTIONS FROM A KERNEL POINT
 		// Example: sm C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Rock_6.obj C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/liver.obj
 		else if (command_type == "sm")
-			ShapeMorph(source_path, target_path);
+			ShapeMorphByKernel(source_path, target_path);
+
+		// APPLY LINEAR INTERPOLATION on vertex positions
+		// Example: lerp C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Rock_6.obj C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/liver.obj
+		else if (command_type == "lerp")
+			ShapeMorphByLerp(source_path, target_path);
 
 		// EXTRACT CONVEX HULL OF MESH
 		// Example:	convexhull C:/Users/Merve/3D_DATABASES/DB_FaustRegistrations/tr_reg_000.off

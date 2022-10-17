@@ -689,7 +689,6 @@ void KernelExpansion_KerTrack::findInitialPoint_5(double* point) {
 				// but the previous point was satisfying j'th half-space
 				// then we understand that j'th halfspace passes through between the previous point and the new point (current point)
 				if (distance > 1e-1 * EPSILON) {
-					cout << i << " " << j << endl;
 					double lineDir[3], goingDir[3];
 					crossProduct(halfSpaceSet[j].ABCD, halfSpaceSet[i].ABCD, lineDir);
 					crossProduct(lineDir, halfSpaceSet[i].ABCD, goingDir);

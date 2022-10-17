@@ -40,8 +40,8 @@ void drawRotatedMeshToScene(string meshName) {
 	else
 		mesh->loadObj(meshName.c_str());
 
-	double angle_X = 30.0 * (PI / 180.0);
-	double angle_Y = 60.0 * (PI / 180.0);
+	double angle_X = 0.0 * (PI / 180.0);
+	double angle_Y = 0.0 * (PI / 180.0);
 	double angle_Z = 90.0 * (PI / 180.0);
 
 	// Rotate mesh
@@ -133,7 +133,7 @@ void drawMultipleMeshToScene(vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set
 		else {
 		*/
 			painter->getShapeSep(mesh, mat, res);
-			if (i > 0)
+			//if (i > 0)
 			painter->drawTriangulation(mesh, res);
 		//}
 		resSet.push_back(res);
