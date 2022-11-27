@@ -42,6 +42,7 @@ public:
 	void drawColorfulTriangulation(Mesh* mesh, SoSeparator* res);
 	void drawSingleTriangle(Mesh* mesh, Triangle* triangle, SoSeparator* res);
 	void drawNormal(Mesh* mesh, int triangle_id, SoSeparator* res);
+	void drawLine(double* p1, double* p2, SoSeparator* res);
 };
 
 #pragma once

@@ -26,7 +26,6 @@ void drawMeshToScene(Mesh* mesh) {
 	painter->getShapeSep(mesh, res);
 	painter->drawTriangulation(mesh, res);
 	scene->makeScene(res);
-
 	delete scene;
 	delete painter;
 
@@ -42,7 +41,7 @@ void drawRotatedMeshToScene(string meshName) {
 
 	double angle_X = 0.0 * (PI / 180.0);
 	double angle_Y = 0.0 * (PI / 180.0);
-	double angle_Z = 90.0 * (PI / 180.0);
+	double angle_Z = 195.0 * (PI / 180.0);
 
 	// Rotate mesh
 	Mesh* rotatedMesh = new Mesh();;

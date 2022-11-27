@@ -44,7 +44,7 @@ void Painter::getShapeSep(Mesh* mesh, SoSeparator* res)
 	// Paint all vertices with the same color
 	SoMaterial* mat = new SoMaterial();
 	mat->diffuseColor.setValue(1, 1, 1);
-	mat->transparency = 0;
+	mat->transparency = 0.5;
 	res->addChild(mat);
 
 	// Gouraud shading
@@ -311,11 +311,15 @@ void Painter::drawSingleTriangle(Mesh* mesh, Triangle* triangle, SoSeparator* re
 
 	for (int se = 0; se < 3; se++) {
 		Edge edge = mesh->getEdge(triangle->edgeList[se]);
-		SbVec3f end1 = (float*)mesh->getVertex(edge.endVerts[0]).coords;
-		SbVec3f end2 = (float*)mesh->getVertex(edge.endVerts[1]).coords;
-		co->point.set1Value(2 * se, end1);
-		co->point.set1Value(2 * se + 1, end2);
+		co->point.set1Value(2 * se, mesh->getVertex(edge.endVerts[0]).coords[0],
+			mesh->getVertex(edge.endVerts[0]).coords[1],
+			mesh->getVertex(edge.endVerts[0]).coords[2]);
+		co->point.set1Value(2 * se + 1, mesh->getVertex(edge.endVerts[1]).coords[0],
+			mesh->getVertex(edge.endVerts[1]).coords[1],
+			mesh->getVertex(edge.endVerts[1]).coords[2]);
+	}
 
+	for (int se = 0; se < 3; se++) {
 		ils->coordIndex.set1Value(3 * se, 2 * se);
 		ils->coordIndex.set1Value(3 * se + 1, 2 * se + 1);
 		ils->coordIndex.set1Value(3 * se + 2, -1);
@@ -361,3 +365,29 @@ void Painter::drawNormal(Mesh* mesh, int triangle_id, SoSeparator* res) {
 	res->addChild(coords);
 	res->addChild(ils);
 }
+
+void Painter::drawLine(double* p1, double* p2, SoSeparator* res) {
+
+	SoMaterial* mat = new SoMaterial();
+	mat->diffuseColor.setValue(0, 0, 1.0);
+	mat->transparency = 0;
+	res->addChild(mat);
+
+	SoCoordinate3* coords = new SoCoordinate3();
+	coords->point.set1Value(0, p1[0], p1[1], p1[2]);
+	coords->point.set1Value(1, p2[0], p2[1], p2[2]);
+
+	// Draw normal
+	SoDrawStyle* sty = new SoDrawStyle;
+	sty->lineWidth = 5.0f;
+	res->addChild(sty);
+	SoIndexedLineSet* ils = new SoIndexedLineSet;
+	ils->coordIndex.set1Value(0, 0);
+	ils->coordIndex.set1Value(1, 1);
+	ils->coordIndex.set1Value(2, -1);
+
+	res->addChild(coords);
+	res->addChild(ils);
+}
+
+

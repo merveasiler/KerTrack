@@ -23,6 +23,7 @@ public:
 	~Mesh();
 	void loadObj(const char* name);
 	void loadOff(const char* name);
+	void writeOff(string meshName);
 
 	// methods to construct mesh
 	void addTriangle(int v1, int v2, int v3);

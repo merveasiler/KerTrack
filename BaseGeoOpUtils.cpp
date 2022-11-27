@@ -51,16 +51,15 @@ double findRayTriangleIntersection(Line* ray, TriangleWithVerts* triangleWV) {
 	double coeff = findLinePlaneIntersection(*ray, *plane);
 	delete plane;
 	if (isinf(coeff)) {
-		delete[] triangleWV->normal;
 		return numeric_limits<double>::infinity();
 	}
+
 	double Q[3];	// intersection point
 	for (int k = 0; k < 3; k++)
 		Q[k] = ray->point[k] + coeff * ray->directionVector[k];
-		
+
 	// compute barycentric coordinates of Q
 	double* baryCoords = triangleWV->computeBarycentricCoords(Q);
-	delete[] triangleWV->normal;
 	if (baryCoords == NULL)
 		return numeric_limits<double>::infinity();
 	delete[] baryCoords;

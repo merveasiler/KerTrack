@@ -87,6 +87,27 @@ void Mesh::loadOff(const char* name) {
 
 }
 
+// Load the mesh in the OFF file format
+void Mesh::writeOff(string meshName) {
+
+	ofstream outFile;
+	outFile.open(meshName.substr(0, meshName.length() - 4) + "_kernel.off");
+
+	// Write the number of vertices and triangles (dummy is the number of edges)
+	outFile << this->getNumOfVerts() << " " << this->getNumOfTris() << " 0" << endl;
+
+	// Write the vertices
+	for (int i = 0; i < this->getNumOfVerts(); i++)
+		outFile << this->getVertex(i).coords[0] << " " << this->getVertex(i).coords[1] << " " <<this->getVertex(i).coords[2] << endl;
+
+	// Write the triangles
+	for (int i = 0; i < this->getNumOfTris(); i++)
+		outFile << "3 " << this->getTriangle(i).corners[0] << " " << this->getTriangle(i).corners[1] << " " << this->getTriangle(i).corners[2] << endl;
+
+	outFile.close();
+
+}
+
 void Mesh::addVertex(double x, double y, double z)
 {
 	int idx = verts.size();

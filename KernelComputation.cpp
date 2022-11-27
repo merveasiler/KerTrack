@@ -16,7 +16,11 @@
 #include "CommonUtils.h"
 #include "CGALUtils.h"
 
+#include <boost/filesystem.hpp>
 #include <ctime>
+#include <fstream>
+
+using namespace boost::filesystem;
 
 /* ***************************** GLOBAL VARIABLES ***************************** */
 /* */ vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh);
@@ -373,6 +377,68 @@ Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio) {
 
 }
 */
+
+void BatchComputeKernel(string folderName) {
+
+	vector<string> meshNames;
+	path p(folderName);
+	for (auto i = directory_iterator(p); i != directory_iterator(); i++)
+	{
+		if (!is_directory(i->path())) //we eliminate directories
+			meshNames.push_back(i->path().filename().string());
+	}
+
+	double avgTime_star = 0, avgTime_nonstar = 0;
+	int numOfStarShapes = 0, numOfNonStarShapes = 0;
+	std::ofstream outputFile;
+	outputFile.open(folderName + "/KernelResults.txt");
+
+	for (int i=0; i < meshNames.size(); i++) {
+		// Read mesh
+		string meshName = meshNames[i];
+		Mesh mesh;
+		if (meshName.substr(meshName.length() - 3, 3) == "off")
+			mesh.loadOff((folderName + "/" + meshName).c_str());
+		else
+			mesh.loadObj((folderName + "/" + meshName).c_str());
+
+		KernelExpansion_KerTrack kertrack(mesh);
+		clock_t begin = clock();
+		kertrack.expandKernel();
+		clock_t end = clock();
+
+		outputFile << meshName << endl;
+		double totalTime = double(end - begin) / CLOCKS_PER_SEC;
+
+		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
+		if (incompleteKernel.getNumOfVerts() > 0) {
+			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
+			outputFile << "\t" << "Number of found kernel vertices: " << incompleteKernel.getNumOfVerts() << "." << endl;
+			outputFile << "\t" << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
+			outputFile << "\t" << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
+			kernel->writeOff(folderName + "/" + meshName);
+			avgTime_star += totalTime;
+			numOfStarShapes++;
+			delete kernel;
+			kernel = NULL;
+		}
+		else {
+			kernel = NULL;
+			outputFile << "\t" << "Kernel is empty!" << endl;
+			outputFile << "\t" << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
+			avgTime_nonstar += totalTime;
+			numOfNonStarShapes++;
+		}
+
+		outputFile << "\t" << "Kernel computation has been completed in " << totalTime << " second(s) by KerTrack." << endl;
+	}
+
+	outputFile << endl << endl;
+	outputFile << "AVERAGE Kernel computation has been completed in " << avgTime_star / numOfStarShapes << " second(s) for " << numOfStarShapes <<  " star-shapes." << endl;
+	outputFile << "AVERAGE Kernel computation has been completed in " << avgTime_nonstar / numOfNonStarShapes << " second(s) for " << numOfNonStarShapes << " nonstar-shapes." << endl;
+	outputFile.close();
+	
+}
 
 Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 

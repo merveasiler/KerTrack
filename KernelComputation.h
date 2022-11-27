@@ -1,6 +1,7 @@
 // @author Merve Asiler
 
 #pragma once
+#pragma comment(lib, "boost_filesystem-vc140-mt.lib")
 
 #include <string>
 using namespace std;
@@ -20,6 +21,8 @@ Mesh* ComputeKernelByMDFKer(Mesh* mesh, int gridDimension[3]);
 
 Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio);
 */
+
+void BatchComputeKernel(string folderName);
 
 Mesh* ComputeKernelByKerTrack(Mesh& mesh);
 

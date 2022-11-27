@@ -10,22 +10,26 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
-		string command_type = "sm";	// argv[1];
-		string shape_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle.off"; // argv[2];
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1.obj";
+		string command_type = "batch";	// argv[1];
+		string shape_path = "D:/VS_Workspace/3D_Databases/DB-Basic/nonsymmetric.off"; // argv[2];
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/321.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/ball.off";
-		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi/1777452.off";
+		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi/1417956.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Refinements/vase/vase6.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-StarCandidates/teddy.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Kids/0001.isometry.1.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Horse/1.obj";
 
-		string source_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle.off";
-		string target_path = "D:/VS_Workspace/3D_Databases/DB-Basic/rectangle_rotated.off";
+		string source_path = "D:/VS_Workspace/3D_Databases/DB-Basic/nonsymmetric.off";
+		string target_path = "D:/VS_Workspace/3D_Databases/DB-Basic/nonsymmetric_rotated.off";
 		//string source_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1.obj";
 		//string target_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/19340_Star_v1_rotated.off";
 		//string source_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star.off";
 		//string target_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star_rotated.off";
+
+		string shape_folder = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi";
+		//string shape_folder = "C:/Users/Merve/Desktop/problematics";
+		//string shape_folder = "D:/VS_Workspace/3D_Databases/DB-Princeton/data";
 
 		// DRAW:
 		// Example:	draw C:/Users/Merve/3D_DATABASES/DB-Kids/method_alexa/11to15at0.5.off
@@ -63,7 +67,7 @@ int main(int argc, char* argv[])
 		else if (command_type == "mdfker_plus")
 			ComputeKernel(shape_path, command_type);
 
-		// COMPUTE KERNEL BY FLOOD FILL FROM A SINGLE POINT -> MDF-KER_TURBO
+		// COMPUTE KERNEL BY KERTRACK
 		// Example: mdfker-turbo C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj
 		else if (command_type == "kertrack")
 			ComputeKernel(shape_path, command_type);
@@ -72,6 +76,11 @@ int main(int argc, char* argv[])
 		// Example: kernelByCGAL C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj
 		else if (command_type == "kernel_by_cgal")
 			ComputeKernel(shape_path, command_type);
+
+		// COMPUTE KERNEL BY KERTRACK FOR ALL MESH FILES IN THE GIVEN FOLDER
+		// Example: batch C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes
+		else if (command_type == "batch")
+			BatchComputeKernel(shape_folder);
 
 		// FIND A KERNEL POINT MAXIMIZING A STATED COST FUNCTION by THIRD PARTY LIBRARY : SDLP
 		// Example: sdlp C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj

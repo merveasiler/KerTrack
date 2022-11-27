@@ -15,7 +15,7 @@ void KernelExpansion_KerTrack::expandKernel() {
 	//cout << "Number of bounding planes: " << halfSpaceSet.size() << " out of " << hostMeshptr->getNumOfTris() << " triangles." << endl;
 
 	double point[3];
-	findInitialPoint_5(point);
+	findInitialPoint_1(point);
 	if (point[0] == numeric_limits<double>::infinity())
 		return;	// NOT STAR-SHAPED!
 
@@ -57,7 +57,7 @@ void KernelExpansion_KerTrack::expandKernel() {
 			break;
 	}
 
-	cout << "[number of kernel edges: " << number_of_kernel_edges << "], number of kernel faces: " << number_of_kernel_faces << "]" << endl;
+//	cout << "[number of kernel edges: " << number_of_kernel_edges << "], number of kernel faces: " << number_of_kernel_faces << "]" << endl;
 /*
 	int num_of_non_kernel_points = 0;
 	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
