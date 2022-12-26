@@ -19,16 +19,18 @@ struct Grid {
 	double minGridCoords[3], maxGridCoords[3];
 
 	Grid() {};
-	Grid(double leastCoordinates[3], double mostCoordinates[3]);
-	Grid(Mesh& hostMesh);
-	void constructGridByCellSize(double cellSize);
-	void constructGridByDiagonalRatio(double ratio);
-	void constructGridByNumOfCells(int gridDimension[3]);
+	Grid(const Mesh& hostMesh, double* leastCoordinates, double* mostCoordinates, int* gridDimension, double cellSizeRatio);
+	void defineGridByMeshCoordinates(const Mesh& hostMesh);
+	void defineGridByExternalCoordinates(double* leastCoordinates, double* mostCoordinates);
+	void partitionGridByCellSize(double cellSize);
+	void partitionGridByDiagonalRatio(double ratio);
+	void partitionGridByNumOfCells(int gridDimension[3]);
 	int getNumOfCells();
 	double getCellSize();
 	double* getMinCoords();
 	double* getMaxCoords();
 	int* findHomeCell(double* point);
+	double* findCellCoords(int i, int j, int k);
 	
 };
 
@@ -51,13 +53,9 @@ protected:
 	bool isCellValidForQueue(int  neighbor_i, int neighbor_j, int neighbor_k);
 	void decideOnNeighbor(int neigh_i, int neigh_j, int neigh_k, double neighVert1_scalar, double neighVert2_scalar, double neighVert3_scalar, double neighVert4_scalar);
 	bool isInKernel(double* scalarVector);
-	NeighborPolarity* determineNeighborPolarity(double* scalarsVector[8]);
-	NeighborPolarity checkPolarityOfNeighborCorners(double* scalarsVector1, double* scalarsVector2, int vectorSize);
 
 public:
-	KernelExpansion(double* extremeDirection, const Mesh& hostMesh, Grid grid);
-	KernelExpansion(const Mesh& hostMesh, double cellSizeRatio);
-	KernelExpansion(const Mesh& hostMesh, int gridDimension[3]);
+	KernelExpansion(const Mesh& hostMesh, double* extremeDirection);
 	KernelExpansion(const Mesh& hostMesh);
 	~KernelExpansion();
 	Mesh& getKernel();
@@ -65,4 +63,6 @@ public:
 	vector<HalfSpace>& getHalfSpaceSet();
 	Grid getGrid();
 	virtual void expandKernel() = 0;
+	void checkKernelForNonKernelVertices();
+	void checkKernelForIrregularTriangles();
 };

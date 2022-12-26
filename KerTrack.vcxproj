@@ -161,6 +161,7 @@
     <ClCompile Include="sdlp.cpp" />
     <ClCompile Include="ShapeMorphing.cpp" />
     <ClCompile Include="SphericalParametrization.cpp" />
+    <ClCompile Include="STLConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseGeoOpUtils.h" />
@@ -180,6 +181,8 @@
     <ClInclude Include="sdlp.h" />
     <ClInclude Include="ShapeMorphing.h" />
     <ClInclude Include="SphericalParametrization.h" />
+    <ClInclude Include="STLConverter.h" />
+    <ClInclude Include="STLReader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

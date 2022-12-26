@@ -21,9 +21,10 @@ private:
 public:
 	Mesh() {};
 	~Mesh();
+	Mesh(const Mesh& mesh);
 	void loadObj(const char* name);
 	void loadOff(const char* name);
-	void writeOff(string meshName);
+	void writeOff(string offFileName);
 
 	// methods to construct mesh
 	void addTriangle(int v1, int v2, int v3);
@@ -43,6 +44,7 @@ public:
 	const vector<Edge>& getAllEdges() const { return edges; };
 
 	// methods to compute mesh features
+	bool isManifold();
 	void addVertexColor(int id, double color[3]);
 	void changeVertexCoords(int id, double coords[3]);
 	void computeTrisAngles();

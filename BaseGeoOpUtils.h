@@ -40,7 +40,7 @@ double findRayTriangleIntersection(Line* ray, TriangleWithVerts* triangleWV);  /
 
 Line* find2PlaneIntersection(Plane* planes[2]);                     // returns the line formed by the intersection of 2 non-parallel planes
 
-double* find3PlaneIntersection(Plane* planes[3]);                   // returns the point formed by the intersection of 3 non-parallel planes
+double* find3PlaneIntersection(Plane planes[3]);                   // returns the point formed by the intersection of 3 non-parallel planes
 
 double* projectVertexOnPlane(Plane* plane, double* vertex);
 

@@ -3,6 +3,7 @@
 #include "KernelComputation.h"
 #include "SceneManager.h"
 #include "CGALUtils.h"
+#include "STLConverter.h"
 
 int main(int argc, char* argv[])
 {
@@ -10,7 +11,7 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	{
-		string command_type = "batch";	// argv[1];
+		string command_type = "draw";	// argv[1];
 		string shape_path = "D:/VS_Workspace/3D_Databases/DB-Basic/nonsymmetric.off"; // argv[2];
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-Star-shaped-meshes/321.off";
 		//string shape_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/ball.off";
@@ -27,9 +28,15 @@ int main(int argc, char* argv[])
 		//string source_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star.off";
 		//string target_path = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Complex_Models/star_rotated.off";
 
-		string shape_folder = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi";
-		//string shape_folder = "C:/Users/Merve/Desktop/problematics";
+		//string shape_folder = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/Thingi";
+		string shape_folder = "D:/VS_Workspace/3D_Databases/DB-Thingi/off_meshes";
 		//string shape_folder = "D:/VS_Workspace/3D_Databases/DB-Princeton/data";
+		//string shape_folder = "C:/Users/Merve/Desktop/problematics";
+
+		//string output_folder = "D:/VS_Workspace/3D_Databases/DB-ItalianStarShapes/KernelResults";
+		string output_folder = "D:/VS_Workspace/3D_Databases/DB-Thingi/KernelResults";
+		//string output_folder = "D:/VS_Workspace/3D_Databases/DB-Princeton/KernelResults";
+		//string output_folder = "C:/Users/Merve/Desktop/KernelResults";
 
 		// DRAW:
 		// Example:	draw C:/Users/Merve/3D_DATABASES/DB-Kids/method_alexa/11to15at0.5.off
@@ -78,9 +85,14 @@ int main(int argc, char* argv[])
 			ComputeKernel(shape_path, command_type);
 
 		// COMPUTE KERNEL BY KERTRACK FOR ALL MESH FILES IN THE GIVEN FOLDER
-		// Example: batch C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes
-		else if (command_type == "batch")
-			BatchComputeKernel(shape_folder);
+		// Example: batch_kertrack C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes
+		else if (command_type == "batch_kernel_kertrack")
+			ComputeBatchKernel(shape_folder, output_folder, command_type);
+
+		// COMPUTE KERNEL BY CGAL FOR ALL MESH FILES IN THE GIVEN FOLDER
+		// Example: batch_cgal C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes
+		else if (command_type == "batch_kernel_cgal")
+			ComputeBatchKernel(shape_folder, output_folder, command_type);
 
 		// FIND A KERNEL POINT MAXIMIZING A STATED COST FUNCTION by THIRD PARTY LIBRARY : SDLP
 		// Example: sdlp C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj
@@ -106,6 +118,11 @@ int main(int argc, char* argv[])
 		// Example:	convexhull C:/Users/Merve/3D_DATABASES/DB_FaustRegistrations/tr_reg_000.off
 		else if (command_type == "convexhull")
 			computeConvexHull(shape_path);
+
+		// CONVERT STL FILES TO OFF FILES
+		// Example:	convertSTL C:/Users/Merve/3D_DATABASES/DB_FaustRegistrations/tr_reg_000.off
+		else if (command_type == "convertSTL")
+			convertFromSTLToOFF(shape_folder, output_folder);
 
 		// UNDEFINED:
 		else

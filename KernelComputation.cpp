@@ -1,12 +1,6 @@
 // @author Merve Asiler
 
 #include "KernelComputation.h"
-/*
-#include "KernelExpansion_SDFKer.h"
-#include "KernelExpansion_SDFKerPlus.h"
-#include "KernelExpansion_MDFKer.h"
-#include "KernelExpansion_MDFKerPlus.h"
-*/
 #include "SphericalParametrization.h"
 #include "ShapeMorphing.h"
 #include "KernelExpansion_KerTrack.h"
@@ -24,7 +18,7 @@ using namespace boost::filesystem;
 
 /* ***************************** GLOBAL VARIABLES ***************************** */
 /* */ vector<double> produceColorSource(Mesh* ground_truth, Mesh* exp_mesh);
-/* */ void computeCenterOfKernel(Mesh* mesh, double center[3]);
+/* */ void computeCenterOfKernel(Mesh& mesh, double center[3]);
 /* */ string fileNames[9] = {"321.off", "325.off", "326.off", "350.off", "cube.off", "cube_broken.off", "liver.obj", "Rock_2.obj", "Rock_6.obj"};
 /* */ double extremeDirections[6][3] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
 /* */ double cellSizeRatios[9][4] = {{0.07, 0.05, 0.035, 0.01}, {0.07, 0.05, 0.035, 0.01}, {0.07, 0.05, 0.035, 0.01}, {0.01, 0.005, 0.0045, 0.0025},
@@ -45,11 +39,11 @@ void doExperimentForPaper(string meshName) {
 		// ... for kernel computation
 	double extremeDirection[3] = { 0, 0, 1 };
 	vector<double> cellSizeRatios{ 0.075}; // the ideal scale is the 2nd one 
-	vector<Mesh*> kernels;
+	vector<Mesh> kernels;
 	kernels.resize(cellSizeRatios.size() * 2 + 1);	// number of experiments: 1 + 4 + 4
 		// ... for positions of the shapes on the scene
 	vector<double*> positions;
-	Grid boundingBox(mesh);	// compute the bounding box of the shape
+	Grid boundingBox(mesh, NULL, NULL, NULL, 1);	// compute the bounding box of the shape
 	double* minborder = boundingBox.getMinCoords();
 	double* maxborder = boundingBox.getMaxCoords();
 	double objectWidth[3], breakWidth[3];
@@ -66,9 +60,9 @@ void doExperimentForPaper(string meshName) {
 
 	/************************************************ ALGORITHMS ************************************************/
 		// ... CGAL
-	Mesh* groundTruth = kernels[0] = ComputeKernelByCGAL(mesh, extremeDirection);
+	Mesh groundTruth = kernels[0] = ComputeKernelByCGAL(mesh, extremeDirection);
 	positions.push_back(new double[3]{objectWidth[0] + breakWidth[0], 0, 0 });	// on the corner scene
-	outputs.push_back(make_tuple(make_tuple(kernels[0], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
+	outputs.push_back(make_tuple(make_tuple(&kernels[0], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 	cout << endl;
 	
 		// ... KERTRACK
@@ -77,35 +71,25 @@ void doExperimentForPaper(string meshName) {
 		double* position = new double[3]{ 0, 0, 0 };	// on the lower row
 		position[0] = i * (objectWidth[0] + breakWidth[0]);
 		positions.push_back(position);
-		outputs.push_back(make_tuple(make_tuple(kernels[j], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
+		outputs.push_back(make_tuple(make_tuple(&kernels[j], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
 		cout << endl;
 	}
 
-		// ... SDF-KER
-	for (int j = 0, i = 1 + kernels.size() / 2; i < kernels.size(); i++, j++) {
-		kernels[i] = NULL;// ComputeKernelBySDFKer(mesh, cellSizeRatios[j]);
-		double* position = new double[3]{ 0, objectWidth[1] + breakWidth[1], 0 };	// on the upper row
-		position[0] = j * (objectWidth[0] + breakWidth[0]);
-		positions.push_back(position);
-		outputs.push_back(make_tuple(make_tuple(kernels[i], kernelMatSetting), make_tuple(&mesh, meshMatSetting)));
-		cout << endl;
-	}
-
-	if (groundTruth->getNumOfVerts() > 0) {
+	if (groundTruth.getNumOfVerts() > 0) {
 
 		// POLYHEDRON-KERNEL (ITALIAN JOB)
-		Mesh* polyhedronKernel = new Mesh();
-		polyhedronKernel->loadOff((meshName.substr(meshName.length() - 3, 3) + "_kernel.off").c_str());
-		kernels.push_back(polyhedronKernel);
+		Mesh polyhedronKernel;
+		polyhedronKernel.loadOff((meshName.substr(meshName.length() - 3, 3) + "_kernel.off").c_str());
+		kernels[2] = polyhedronKernel;
 		positions.push_back(new double[3]{ -1, -1, -1 });	// not to be used
 		cout << endl;
 
 		/*********************************** COMPARE HAUSDORFF DISTANCES & VOLUMES ***********************************/
-		double groundTruthVolume = groundTruth->computeVolume();
+		double groundTruthVolume = groundTruth.computeVolume();
 		for (int j = 0, mod = (kernels.size() - 1) / 2, i = 1; i < kernels.size(); i++, j++) {
 			double volume = 0;
-			if (kernels[i])
-				volume = kernels[i]->computeVolume();
+			if (kernels[i].getNumOfVerts() > 0)
+				volume = kernels[i].computeVolume();
 			if (volume < EPSILON)
 				continue;
 			cout << "Volume of the kernel of " << cellSizeRatios[j % mod] << ": " << volume << " out of " << groundTruthVolume << "." << endl;
@@ -135,10 +119,9 @@ void doExperimentForPaper(string meshName) {
 	}
 
 	/************************************************* CLEAN-UP *************************************************/
-	for (int i = 0; i < kernels.size(); i++) {
-		delete kernels[i];
+	for (int i = 0; i < kernels.size(); i++) 
 		delete[] positions[i];
-	}
+
 	delete kernelMatSetting;
 	delete meshMatSetting;
 
@@ -157,9 +140,10 @@ void ComputeKernel(string meshName, string algoType) {
 	double extremeDirection[3] = { 0, -1, 0 };
 	double cellSizeRatio = 0.07;
 	int gridDimension[3] = {2, 2, 2};
-	Mesh* kernel = nullptr;
+	Mesh kernel;
 
 	// Compute kernel
+	
 	/*
 	if (algoType == "sdfker")
 		kernel = ComputeKernelBySDFKer(mesh, cellSizeRatio);
@@ -169,219 +153,28 @@ void ComputeKernel(string meshName, string algoType) {
 		kernel = ComputeKernelByMDFKer(mesh, gridDimension);
 	else if (algoType == "mdfker_plus")
 		kernel = ComputeKernelByMDFKerPlus(mesh, cellSizeRatio);
-	else*/ if (algoType == "kertrack")
+	*/
+	if (algoType == "kertrack")
 		kernel = ComputeKernelByKerTrack(mesh);
 	else if (algoType == "kernel_by_cgal")
 		kernel = ComputeKernelByCGAL(mesh, extremeDirection);
 	else;
 
 	// Draw
-	if (kernel) {
+	if (kernel.getNumOfVerts() > 0) {
 		MaterialSetting* kernelMatSetting = new MaterialSetting(0, 0, 1, 0);
 		MaterialSetting* meshMatSetting = new MaterialSetting(1, 1, 1, 0.5);
-		vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(kernel, kernelMatSetting), make_tuple(&mesh, meshMatSetting) };
+		vector<tuple<Mesh*, MaterialSetting*>> mesh_mat_set = { make_tuple(&kernel, kernelMatSetting), make_tuple(&mesh, meshMatSetting) };
 		drawMultipleMeshToScene(mesh_mat_set);
-		delete kernel;
 	}
 
 }
 
-/*
-Mesh* ComputeKernelBySDFKer(Mesh* mesh, double cellSizeRatio) {
+void ComputeBatchKernel(string inputFolderName, string outputFolderName, string algoType) {
 
-	// Execute by <executionCount>-many times
-	double totalTime = 0;
-	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
-		KernelExpansion* kernelExpansion = new KernelExpansion_SDFKer(*mesh, cellSizeRatio);
-		kernelExpansion->expandKernel();
-		Mesh* kernel = kernelExpansion->getKernel();
-		clock_t end = clock();
-		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-
-		if (kernel)
-			delete kernel;
-		delete kernelExpansion;
-	}
-
-	// Execute to see the results
-	KernelExpansion* kernelExpansion = new KernelExpansion_SDFKer(*mesh, cellSizeRatio);
-	kernelExpansion->expandKernel();
-	Mesh* kernel = kernelExpansion->getKernel();
-	if (kernel) {
-		double* kernelPoint = kernelExpansion->getInitialKernelPoint();
-		cout << "Used kernel point: " << kernelPoint[0] << " " << kernelPoint[1] << " " << kernelPoint[2] << endl;
-		cout << "Cell size is " << cellSizeRatio << " of the grid's diagonal: " << kernelExpansion->getGrid().getCellSize() << endl;
-		cout << "Number of cells in grid: " << kernelExpansion->getGrid().getNumOfCells() << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
-		delete kernel;
-	}
-	else {
-		kernel = NULL;
-		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
-	}
-
-	// Print the average time
-	double elapsed_secs = totalTime / executionCount;
-	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by SDF-KER-PLUS with cell size ratio = " << cellSizeRatio << "." << endl;
-	delete kernelExpansion;
-	return kernel;
-
-}
-
-Mesh* ComputeKernelBySDFKerPlus(Mesh* mesh, double cellSizeRatio, double* extremeDirection) {
-
-	// Execute by <executionCount>-many times
-	double totalTime = 0;
-	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
-		Grid grid(mesh);
-		grid.constructGridByDiagonalRatio(cellSizeRatio);
-		KernelExpansion* kernelExpansion = new KernelExpansion_SDFKerPlus(extremeDirection, *mesh, grid);
-		kernelExpansion->expandKernel();
-		Mesh* kernel = kernelExpansion->getKernel();
-		clock_t end = clock();
-		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-
-		if (kernel)
-			delete kernel;
-		delete kernelExpansion;
-	}
-
-	// Execute to see the results
-	Grid grid(mesh);
-	grid.constructGridByDiagonalRatio(cellSizeRatio);
-	KernelExpansion* kernelExpansion = new KernelExpansion_SDFKerPlus(extremeDirection, *mesh, grid);
-	kernelExpansion->expandKernel();
-	Mesh* kernel = kernelExpansion->getKernel();
-	if (kernel) {
-		double* kernelPoint = kernelExpansion->getInitialKernelPoint();
-		cout << "Used kernel point: " << kernelPoint[0] << " " << kernelPoint[1] << " " << kernelPoint[2] << endl;
-		cout << "Cell size is " << cellSizeRatio << " of the grid's diagonal: " << grid.getCellSize() << endl;
-		cout << "Number of cells in grid: " << grid.getNumOfCells() << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
-		delete kernel;
-	}
-	else {
-		kernel = NULL;
-		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
-	}
-
-	// Print the average time
-	double elapsed_secs = totalTime / executionCount;
-	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s)." << endl;
-	delete kernelExpansion;
-	return kernel;
-
-}
-
-Mesh* ComputeKernelByMDFKer(Mesh* mesh, int gridDimension[3]) {
-
-	// Execute by <executionCount>-many times
-	double totalTime = 0;
-	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
-		Grid grid(mesh);
-		KernelExpansion* kernelExpansion = new KernelExpansion_MDFKer(*mesh, gridDimension);
-		kernelExpansion->expandKernel();
-		Mesh* kernel = NULL, *incompleteKernel = kernelExpansion->getKernel();
-		if (incompleteKernel)
-			kernel = computeConvexHull(incompleteKernel->getAllVerts());
-		clock_t end = clock();
-		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-
-		if (incompleteKernel) {
-			delete incompleteKernel;
-			delete kernel;
-		}
-		delete kernelExpansion;
-	}
-
-	// Execute to see the results
-	Grid grid(mesh);
-	KernelExpansion* kernelExpansion = new KernelExpansion_MDFKer(*mesh, gridDimension);
-	kernelExpansion->expandKernel();
-	Mesh* kernel, *incompleteKernel = kernelExpansion->getKernel();
-	if (incompleteKernel) {
-		kernel = computeConvexHull(incompleteKernel->getAllVerts());
-		double* kernelPoint = kernelExpansion->getInitialKernelPoint();
-		cout << "Used kernel point: " << kernelPoint[0] << " " << kernelPoint[1] << " " << kernelPoint[2] << endl;
-		cout << "Cell dimension is: " << gridDimension[0] << " x " << gridDimension[1] << " x " << gridDimension[2] << ".\n";
-		cout << "Number of found kernel vertices: " << incompleteKernel->getNumOfVerts() << "." << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
-		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-		delete incompleteKernel;
-	}
-	else {
-		kernel = NULL;
-		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
-	}
-	
-	// Print the average time
-	double elapsed_secs = totalTime / executionCount;
-	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by MDF-KER." << endl;
-	delete kernelExpansion;
-	return kernel;
-}
-
-Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio) {
-
-	// Execute by <executionCount>-many times
-	double totalTime = 0;
-	for (int i = 0; i < executionCount; i++) {
-		clock_t begin = clock();
-		KernelExpansion* kernelExpansion = new KernelExpansion_MDFKerPlus(*mesh, cellSizeRatio);
-		kernelExpansion->expandKernel();
-		Mesh* kernel = NULL, *incompleteKernel = kernelExpansion->getKernel();
-		if (incompleteKernel)
-			kernel = computeConvexHull(incompleteKernel->getAllVerts());
-		clock_t end = clock();
-		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-
-		if (incompleteKernel) {
-			delete incompleteKernel;
-			delete kernel;
-		}
-		delete kernelExpansion;
-	}
-
-	// Execute to see the results
-	KernelExpansion* kernelExpansion = new KernelExpansion_MDFKerPlus(*mesh, cellSizeRatio);
-	kernelExpansion->expandKernel();
-	Mesh* kernel, *incompleteKernel = kernelExpansion->getKernel();
-	if (incompleteKernel) {
-		kernel = computeConvexHull(incompleteKernel->getAllVerts());
-		double* kernelPoint = kernelExpansion->getInitialKernelPoint();
-		cout << "Used kernel point: " << kernelPoint[0] << " " << kernelPoint[1] << " " << kernelPoint[2] << endl;
-		cout << "Cell size is " << cellSizeRatio << " of the grid's diagonal: " << kernelExpansion->getGrid().getCellSize() << endl;
-		cout << "Number of cells in grid: " << kernelExpansion->getGrid().getNumOfCells() << endl;
-		cout << "Number of found kernel vertices: " << incompleteKernel->getNumOfVerts() << "." << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "], [edges: " << mesh->getNumOfEdges() << "], [vertices: " << mesh->getNumOfVerts() << "]" << endl;
-		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-		delete incompleteKernel;
-	}
-	else {
-		kernel = NULL;
-		cout << "Kernel is empty!" << endl;
-		cout << "Mesh: [faces: " << mesh->getNumOfTris() << "]\n";
-	}
-
-	// Print the average time
-	double elapsed_secs = totalTime / executionCount;
-	cout << "Kernel computation has been completed in " << elapsed_secs << " second(s) by MDF-KER-PLUS." << endl;
-	delete kernelExpansion;
-	return kernel;
-
-}
-*/
-
-void BatchComputeKernel(string folderName) {
-
+	// Read folder, fecth mesh names
 	vector<string> meshNames;
-	path p(folderName);
+	path p(inputFolderName);
 	for (auto i = directory_iterator(p); i != directory_iterator(); i++)
 	{
 		if (!is_directory(i->path())) //we eliminate directories
@@ -390,40 +183,62 @@ void BatchComputeKernel(string folderName) {
 
 	double avgTime_star = 0, avgTime_nonstar = 0;
 	int numOfStarShapes = 0, numOfNonStarShapes = 0;
+	string extension;
 	std::ofstream outputFile;
-	outputFile.open(folderName + "/KernelResults.txt");
+	if (algoType == "batch_kernel_kertrack") {
+		outputFile.open(outputFolderName + "/KernelResults_KerTrack.txt");
+		extension = "_kernel_by_kertrack.off";
+	}
+	else if (algoType == "batch_kernel_cgal") {
+		outputFile.open(outputFolderName + "/KernelResults_CGAL.txt");
+		extension = "_kernel_by_cgal.off";
+	}
 
-	for (int i=0; i < meshNames.size(); i++) {
+	// Compute batch kernel
+	for (int i = 0; i < meshNames.size(); i++) {
 		// Read mesh
 		string meshName = meshNames[i];
 		Mesh mesh;
 		if (meshName.substr(meshName.length() - 3, 3) == "off")
-			mesh.loadOff((folderName + "/" + meshName).c_str());
+			mesh.loadOff((inputFolderName + "/" + meshName).c_str());
 		else
-			mesh.loadObj((folderName + "/" + meshName).c_str());
+			mesh.loadObj((inputFolderName + "/" + meshName).c_str());
 
-		KernelExpansion_KerTrack kertrack(mesh);
-		clock_t begin = clock();
-		kertrack.expandKernel();
-		clock_t end = clock();
+		if (mesh.isManifold() == false) {
+			cout << "NOT MANIFOLD: " << i << ": " << meshName << " !!!!!!!!!!!!!!!!!!" << endl;
+			continue;
+		}
+		cout << i << ": " << meshName << endl;
+
+		// kernel computation
+		Mesh kernel;
+		clock_t	begin = clock();
+		if (algoType == "batch_kernel_kertrack") {
+			KernelExpansion_KerTrack kertrack(mesh);
+			kertrack.expandKernel();
+			Mesh & incompleteKernel = kertrack.getKernel();
+			if (incompleteKernel.getNumOfVerts() > 0)
+				kernel = computeConvexHull(incompleteKernel.getAllVerts());
+		}
+		else if (algoType == "batch_kernel_cgal") {
+			kernel = computeKernelByCGAL(mesh, NULL);
+		}
+		else;
+		clock_t	end = clock();
 
 		outputFile << meshName << endl;
 		double totalTime = double(end - begin) / CLOCKS_PER_SEC;
 
-		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
-		if (incompleteKernel.getNumOfVerts() > 0) {
-			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
-			outputFile << "\t" << "Number of found kernel vertices: " << incompleteKernel.getNumOfVerts() << "." << endl;
+		// output notes
+		if (kernel.getNumOfVerts() > 0) {
+			outputFile << "\t" << "Number of found kernel vertices: " << kernel.getNumOfVerts() << "." << endl;
 			outputFile << "\t" << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
-			outputFile << "\t" << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-			kernel->writeOff(folderName + "/" + meshName);
+			outputFile << "\t" << "Kernel: [faces: " << kernel.getNumOfTris() << "], [edges: " << kernel.getNumOfEdges() << "], [vertices: " << kernel.getNumOfVerts() << "]" << endl;
+			//kernel->writeOff(outputFolderName + "/" + meshName.substr(0, meshName.length() - 4) + extension);
 			avgTime_star += totalTime;
 			numOfStarShapes++;
-			delete kernel;
-			kernel = NULL;
 		}
 		else {
-			kernel = NULL;
 			outputFile << "\t" << "Kernel is empty!" << endl;
 			outputFile << "\t" << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
 			avgTime_nonstar += totalTime;
@@ -434,13 +249,13 @@ void BatchComputeKernel(string folderName) {
 	}
 
 	outputFile << endl << endl;
-	outputFile << "AVERAGE Kernel computation has been completed in " << avgTime_star / numOfStarShapes << " second(s) for " << numOfStarShapes <<  " star-shapes." << endl;
+	outputFile << "AVERAGE Kernel computation has been completed in " << avgTime_star / numOfStarShapes << " second(s) for " << numOfStarShapes << " star-shapes." << endl;
 	outputFile << "AVERAGE Kernel computation has been completed in " << avgTime_nonstar / numOfNonStarShapes << " second(s) for " << numOfNonStarShapes << " nonstar-shapes." << endl;
 	outputFile.close();
-	
+
 }
 
-Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
+Mesh ComputeKernelByKerTrack(Mesh& mesh) {
 
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
@@ -450,25 +265,20 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 		kertrack.expandKernel(); 
 		clock_t end = clock(); 
 		Mesh* kernel = NULL, &incompleteKernel = kertrack.getKernel();
-		if (incompleteKernel.getNumOfVerts() > 0) {
-			Mesh* kernel = computeConvexHull(incompleteKernel.getAllVerts());
-			delete kernel;
-		}
 		totalTime += double(end - begin) / CLOCKS_PER_SEC;
 	}
 	
 	// Execute to see the results
 	KernelExpansion_KerTrack kertrack(mesh);
 	kertrack.expandKernel();
-	Mesh* kernel, &incompleteKernel = kertrack.getKernel();
+	Mesh kernel, &incompleteKernel = kertrack.getKernel();
 	if (incompleteKernel.getNumOfVerts() > 0) {
 		kernel = computeConvexHull(incompleteKernel.getAllVerts());
 		cout << "Number of found kernel vertices: " << incompleteKernel.getNumOfVerts() << "." << endl;
 		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
-		cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
+		cout << "Kernel: [faces: " << kernel.getNumOfTris() << "], [edges: " << kernel.getNumOfEdges() << "], [vertices: " << kernel.getNumOfVerts() << "]" << endl;
 	}
 	else {
-		kernel = NULL;
 		cout << "Kernel is empty!" << endl;
 		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
 	}		
@@ -480,29 +290,25 @@ Mesh* ComputeKernelByKerTrack(Mesh& mesh) {
 	return kernel;
 }
 
-Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {
+Mesh ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection) {
 
 	// Execute by <executionCount>-many times
 	double totalTime = 0;
 	for (int i = 0; i < executionCount; i++) {
-		Mesh* kernel = NULL;
 		clock_t begin = clock();
-		kernel = computeKernelByCGAL(mesh, NULL);
+		Mesh kernel = computeKernelByCGAL(mesh, NULL);
 		clock_t end = clock();
 		totalTime += double(end - begin) / CLOCKS_PER_SEC;
-
-		if (kernel)
-			delete kernel;
 	}
 
 	// Execute to see the results
-	Mesh* kernel;
+	Mesh kernel;
 	kernel = computeKernelByCGAL(mesh, NULL);
-	cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
-	cout << "Kernel: [faces: " << kernel->getNumOfTris() << "], [edges: " << kernel->getNumOfEdges() << "], [vertices: " << kernel->getNumOfVerts() << "]" << endl;
-	
-	if (!kernel) {
-		kernel = NULL;
+	if (kernel.getNumOfVerts() > 0) {
+		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "], [edges: " << mesh.getNumOfEdges() << "], [vertices: " << mesh.getNumOfVerts() << "]" << endl;
+		cout << "Kernel: [faces: " << kernel.getNumOfTris() << "], [edges: " << kernel.getNumOfEdges() << "], [vertices: " << kernel.getNumOfVerts() << "]" << endl;
+	}
+	else {
 		cout << "Kernel is empty!" << endl;
 		cout << "Mesh: [faces: " << mesh.getNumOfTris() << "]\n";
 	}
@@ -533,11 +339,11 @@ void FindKernelPoint_SDLP(string meshName) {
 
 void SphericalParametrize(string meshName) {
 
-	Mesh* mesh = new Mesh();
+	Mesh mesh;
 	if (meshName.substr(meshName.length() - 3, 3) == "off")
-		mesh->loadOff(meshName.c_str());
+		mesh.loadOff(meshName.c_str());
 	else
-		mesh->loadObj(meshName.c_str());
+		mesh.loadObj(meshName.c_str());
 
 	int resolution = 10;
 	double radius[1] = { 1.0 };
@@ -547,16 +353,14 @@ void SphericalParametrize(string meshName) {
 
 	/*
 	double extremeDirection[3] = { 0, 0, 1 };
-	double* kernelPoint = sdlpMain(*mesh, extremeDirection);
+	double* kernelPoint = sdlpMain(mesh, extremeDirection);
 	double* center = kernelPoint;
 	*/
 
-	Mesh* sphericalMesh = new Mesh();
+	Mesh sphericalMesh;
 	parametrizeByKernel(mesh, sphericalMesh, center, radius, resolution);
-	drawMeshOnSphere(sphericalMesh, mesh, center, radius[0]);
+	drawMeshOnSphere(&sphericalMesh, &mesh, center, radius[0]);
 
-	delete mesh;
-	delete sphericalMesh;
 }
 
 void ShapeMorphByKernel(string sourceMeshName, string targetMeshName) {
@@ -633,9 +437,9 @@ void ShapeMorphByLerp(string sourceMeshName, string targetMeshName) {
 	delete targetMesh;
 }
 
-void computeCenterOfKernel(Mesh* mesh, double center[3]) {
+void computeCenterOfKernel(Mesh& mesh, double center[3]) {
 
-	KernelExpansion_KerTrack kt(*mesh);
+	KernelExpansion_KerTrack kt(mesh);
 	kt.expandKernel();
 	Mesh& kernel = kt.getKernel();
 

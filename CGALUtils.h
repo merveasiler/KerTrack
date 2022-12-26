@@ -28,11 +28,11 @@ typedef CGALPolyhedron::Halfedge_around_facet_circulator		Halfedge_facet_circula
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
-Mesh* convertCGALMeshToMesh(CGALMesh sm);
-Mesh* convertCGALPolyhedronToMesh(CGALPolyhedron poly);
-CGALMesh convertMeshToCGALMesh(Mesh* mesh);
-CGALMesh convertMeshToCGALGraphMesh(Mesh* mesh);
-double* computeHausdorffDistance(Mesh* mesh1, Mesh* mesh2);
-Mesh* computeConvexHull(const vector<Vertex>& vertices);
-Mesh* computeConvexHull(string meshName);
+Mesh convertCGALMeshToMesh(CGALMesh sm);
+Mesh convertCGALPolyhedronToMesh(CGALPolyhedron poly);
+CGALMesh convertMeshToCGALMesh(Mesh& mesh);
+CGALMesh convertMeshToCGALGraphMesh(Mesh& mesh);
+double* computeHausdorffDistance(Mesh& mesh1, Mesh& mesh2);
+Mesh computeConvexHull(const vector<Vertex>& vertices);
+Mesh computeConvexHull(string meshName);
 

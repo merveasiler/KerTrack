@@ -76,6 +76,9 @@
     <ClCompile Include="ShapeMorphing.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
+    <ClCompile Include="STLConverter.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComputeKernelByCGAL.h">
@@ -128,6 +131,12 @@
     </ClInclude>
     <ClInclude Include="ShapeMorphing.h">
       <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="STLReader.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="STLConverter.h">
+      <Filter>Externals</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

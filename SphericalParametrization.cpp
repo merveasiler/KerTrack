@@ -2,15 +2,15 @@
 
 #include "SphericalParametrization.h"
 
-void findBoundingBox(Mesh* mesh, double min[3], double max[3]) {
+void findBoundingBox(Mesh& mesh, double min[3], double max[3]) {
 
 	for (int k = 0; k < 3; k++) {
 		min[k] = numeric_limits<double>::infinity();
 		max[k] = -numeric_limits<double>::infinity();
 	}
 
-	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-		Vertex v = mesh->getVertex(i);
+	for (int i = 0; i < mesh.getNumOfVerts(); i++) {
+		Vertex v = mesh.getVertex(i);
 		for (int k = 0; k < 3; k++) {
 			if (v.coords[k] < min[k])
 				min[k] = v.coords[k];
@@ -31,15 +31,15 @@ void computeColor(double coords[3], double min[3], double max[3], double color[3
 
 }
 
-void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], double radius[1], int resolution) {
+void parametrizeByKernel(Mesh& mesh, Mesh& sphericalMesh, double center[3], double radius[1], int resolution) {
 
 	double min[3], max[3];
 	findBoundingBox(mesh, min, max);
 	radius[0] = (max[0] - min[0]) / 2;
 
 	// project mesh vertices onto the sphere
-	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-		Vertex v = mesh->getVertex(i);
+	for (int i = 0; i < mesh.getNumOfVerts(); i++) {
+		Vertex v = mesh.getVertex(i);
 		double rayDirection[3];
 		for (int j = 0; j < 3; j++)
 			rayDirection[j] = v.coords[j] - center[j];
@@ -48,17 +48,17 @@ void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], doub
 		double newcoords[3];
 		for (int j = 0; j < 3; j++)
 			newcoords[j] = center[j] + rayDirection[j] * radius[0];
-		sphericalMesh->addVertex(newcoords[0], newcoords[1], newcoords[2]);
+		sphericalMesh.addVertex(newcoords[0], newcoords[1], newcoords[2]);
 		double color[3];
 		computeColor(v.coords, min, max, color);
-		sphericalMesh->addVertexColor(i, color);
-		mesh->addVertexColor(i, color);
+		sphericalMesh.addVertexColor(i, color);
+		mesh.addVertexColor(i, color);
 	}
 
 	
-	for (int i = 0; i < mesh->getNumOfTris(); i++) {
-		Triangle t = mesh->getTriangle(i);
-		sphericalMesh->addTriangle(t.corners[0], t.corners[1], t.corners[2]);
+	for (int i = 0; i < mesh.getNumOfTris(); i++) {
+		Triangle t = mesh.getTriangle(i);
+		sphericalMesh.addTriangle(t.corners[0], t.corners[1], t.corners[2]);
 	}
 	
 	/*
@@ -103,9 +103,9 @@ void parametrizeByKernel(Mesh* mesh, Mesh* sphericalMesh, double center[3], doub
 	
 	double width = max[0] - min[0] + 10.0;
 	double height = 10.0;
-	for (int i = 0; i < mesh->getNumOfVerts(); i++) {
-		Vertex v = mesh->getVertex(i);
+	for (int i = 0; i < mesh.getNumOfVerts(); i++) {
+		Vertex v = mesh.getVertex(i);
 		double coords[3] = { v.coords[0] - width, v.coords[1], v.coords[2] + height};
-		mesh->changeVertexCoords(i, coords);
+		mesh.changeVertexCoords(i, coords);
 	}
 }

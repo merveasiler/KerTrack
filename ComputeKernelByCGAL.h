@@ -4,5 +4,5 @@
 
 #include "Mesh.h"
 
-Mesh* computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint);
+Mesh computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint);
 

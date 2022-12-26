@@ -4,6 +4,15 @@
 #include "BasicGeometricElements.h"
 #include "BaseGeoOpUtils.h"
 
+bool Mesh::isManifold() {
+
+	for (int i = 0; i < edges.size(); i++)
+		if (edges[i].triList.size() > 2)
+			return false;
+	return true;
+
+}
+
 void Mesh::computeTrisAngles() {
 
 	for (unsigned int i = 0; i < tris.size(); i++) {

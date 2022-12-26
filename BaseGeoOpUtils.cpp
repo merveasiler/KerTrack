@@ -101,12 +101,12 @@ Line* find2PlaneIntersection(Plane* planes[2]) {
 	return line;
 }
 
-double* find3PlaneIntersection(Plane* planes[3]) {
+double* find3PlaneIntersection(Plane planes[3]) {
 	// Cramer's rule
 	
-	double ABC[3][3] = { {planes[0]->ABCD[0], planes[0]->ABCD[1], planes[0]->ABCD[2]},
-						 {planes[1]->ABCD[0], planes[1]->ABCD[1], planes[1]->ABCD[2]},
-						 {planes[2]->ABCD[0], planes[2]->ABCD[1], planes[2]->ABCD[2]} };
+	double ABC[3][3] = { {planes[0].ABCD[0], planes[0].ABCD[1], planes[0].ABCD[2]},
+						 {planes[1].ABCD[0], planes[1].ABCD[1], planes[1].ABCD[2]},
+						 {planes[2].ABCD[0], planes[2].ABCD[1], planes[2].ABCD[2]} };
 
 	double detABC = computeDeterminant3x3(ABC);
 	if (abs(detABC) < 3*EPSILON*EPSILON)
@@ -119,9 +119,9 @@ double* find3PlaneIntersection(Plane* planes[3]) {
 			ABC_y[i][j] = ABC[i][j];
 			ABC_z[i][j] = ABC[i][j];
 		}
-		ABC_x[i][0] = -planes[i]->ABCD[3];
-		ABC_y[i][1] = -planes[i]->ABCD[3];
-		ABC_z[i][2] = -planes[i]->ABCD[3];
+		ABC_x[i][0] = -planes[i].ABCD[3];
+		ABC_y[i][1] = -planes[i].ABCD[3];
+		ABC_z[i][2] = -planes[i].ABCD[3];
 	}
 
 	double* xyz = new double[3];

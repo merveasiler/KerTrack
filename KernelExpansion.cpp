@@ -4,59 +4,31 @@
 #include "BaseGeoOpUtils.h"
 #include "sdlp.h"
 
-KernelExpansion::KernelExpansion(double* extremeDirection, const Mesh& hostMesh, Grid grid) {
-
-	this->hostMeshptr = &hostMesh;
-	this->grid = grid;
-	
-	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
-	this->initialPoint = sdlpMain(extremeDirection, halfSpaceSet);	// compute initial kernel point
-	this->extremeCorners[0] = nullptr;	this->extremeCorners[1] = nullptr;
-
-}
-
-KernelExpansion::KernelExpansion(const Mesh& hostMesh, double cellSizeRatio) {
+KernelExpansion::KernelExpansion(const Mesh& hostMesh, double* extremeDirection) {
 
 	this->hostMeshptr = &hostMesh;
 
 	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
 
-	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
-	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
-	for (int i = 0; i < 6; i++) {
-		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
-		if (!this->initialPoint)
-			return;
-		this->extremeCorners[i % 2][int(i / 2)] = this->initialPoint[int(i / 2)];
-		delete[] this->initialPoint;
+	if (extremeDirection) {
+		// FIND POINT BY USING SINGLE EXTREME DIRECTION
+		this->extremeCorners[0] = nullptr;	this->extremeCorners[1] = nullptr;
+		this->initialPoint = sdlpMain(extremeDirection, halfSpaceSet);	// compute initial kernel point
 	}
-	this->initialPoint = nullptr;
-
-	Grid grid(extremeCorners[1], extremeCorners[0]);
-	grid.constructGridByDiagonalRatio(cellSizeRatio);
-	this->grid = grid;
-}
-
-KernelExpansion::KernelExpansion(const Mesh& hostMesh, int gridDimension[3]) {
-
-	this->hostMeshptr = &hostMesh;
-
-	computeHalfSpacesFromTriangles(hostMeshptr->getAllTris(), hostMeshptr->getAllVerts(), this->halfSpaceSet);
-
-	extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
-	double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
-	for (int i = 0; i < 6; i++) {
-		this->initialPoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
-		if (!this->initialPoint)
-			return;
-		this->extremeCorners[i % 2][int(i / 2)] = this->initialPoint[int(i / 2)];
-		delete[] this->initialPoint;
+	else {
+		// FIND POINT BY USING ALL OF THE 6 EXTREME DIRECTIONS, TAKE THEIR AVERAGE
+		extremeCorners[0] = new double[3];	extremeCorners[1] = new double[3];
+		double extremeDirections[6][3] = { {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1} };
+		for (int i = 0; i < 6; i++) {
+			this->initialPoint = sdlpMain(extremeDirections[i], halfSpaceSet);	// compute initial kernel point at the given extreme direction
+			if (!this->initialPoint)
+				return;
+			this->extremeCorners[i % 2][int(i / 2)] = this->initialPoint[int(i / 2)];
+			delete[] this->initialPoint;
+		}
+		this->initialPoint = nullptr;
 	}
-	this->initialPoint = nullptr;
 
-	Grid grid(extremeCorners[1], extremeCorners[0]);
-	grid.constructGridByNumOfCells(gridDimension);
-	this->grid = grid;
 }
 
 KernelExpansion::KernelExpansion(const Mesh& hostMesh) {
@@ -173,63 +145,52 @@ bool KernelExpansion::isInKernel(double* scalarVector) {
 	return true;		// in
 }
 
-NeighborPolarity* KernelExpansion::determineNeighborPolarity(double* scalarsVector[8]) {
+void KernelExpansion::checkKernelForNonKernelVertices() {
 
-	int vectorSize = halfSpaceSet.size();
-	NeighborPolarity* edgePolarityTypes = new NeighborPolarity[12];
-
-	edgePolarityTypes[0] = checkPolarityOfNeighborCorners(scalarsVector[0], scalarsVector[1], vectorSize);
-	edgePolarityTypes[1] = checkPolarityOfNeighborCorners(scalarsVector[0], scalarsVector[3], vectorSize);
-	edgePolarityTypes[2] = checkPolarityOfNeighborCorners(scalarsVector[0], scalarsVector[4], vectorSize);
-	edgePolarityTypes[3] = checkPolarityOfNeighborCorners(scalarsVector[1], scalarsVector[2], vectorSize);
-	edgePolarityTypes[4] = checkPolarityOfNeighborCorners(scalarsVector[1], scalarsVector[5], vectorSize);
-	edgePolarityTypes[5] = checkPolarityOfNeighborCorners(scalarsVector[2], scalarsVector[3], vectorSize);
-	edgePolarityTypes[6] = checkPolarityOfNeighborCorners(scalarsVector[2], scalarsVector[6], vectorSize);
-	edgePolarityTypes[7] = checkPolarityOfNeighborCorners(scalarsVector[3], scalarsVector[7], vectorSize);
-	edgePolarityTypes[8] = checkPolarityOfNeighborCorners(scalarsVector[4], scalarsVector[5], vectorSize);
-	edgePolarityTypes[9] = checkPolarityOfNeighborCorners(scalarsVector[4], scalarsVector[7], vectorSize);
-	edgePolarityTypes[10] = checkPolarityOfNeighborCorners(scalarsVector[5], scalarsVector[6], vectorSize);
-	edgePolarityTypes[11] = checkPolarityOfNeighborCorners(scalarsVector[6], scalarsVector[7], vectorSize);
-
-	return edgePolarityTypes;
-}
-
-NeighborPolarity KernelExpansion::checkPolarityOfNeighborCorners(double* scalarsVector1, double* scalarsVector2, int vectorSize) {
-
-	bool polarized1 = false, polarized2 = false, polarized3 = false;
-
-	for (int i = 0; i < vectorSize; i++) {
-		if (scalarsVector1[i] <= EPSILON && scalarsVector1[i] >= -EPSILON)
-			polarized3 = true;
-		else if (scalarsVector1[i] < 0) {
-			if (scalarsVector2[i] >= -EPSILON)
-				polarized1 = true;
-		}
-		else { // if (scalarsVector1[i] > 0)
-			if (scalarsVector2[i] <= EPSILON)
-				polarized2 = true;
+	int num_of_non_kernel_points = 0;
+	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
+		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON ||
+			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) > 3 * EPSILON) {
+			cout << "non-kernel point" << endl;
+			num_of_non_kernel_points++;
 		}
 	}
-
-	if ((polarized1 && polarized2) || (polarized1 && polarized3) || (polarized2 && polarized3))
-		return NeighborPolarity::DISTINCT_SIDED_INCLUSION;
-	if (polarized1 || polarized2 || polarized3)
-		return NeighborPolarity::ONE_SIDED;
-	return NeighborPolarity::NO_POLARITY;
+	cout << "num of non-kernel points is: " << num_of_non_kernel_points << endl;
 
 }
 
+void KernelExpansion::checkKernelForIrregularTriangles() {
 
-
-Grid::Grid(double leastCoordinates[3], double mostCoordinates[3]) {
-
-	for (int j = 0; j < 3; j++) {
-		this->minGridCoords[j] = leastCoordinates[j];
-		this->maxGridCoords[j] = mostCoordinates[j];
+	int num_of_irregular_triangles = 0;
+	for (int i = 0; i < kernel.getNumOfTris(); i++) {
+		if (kernel.getTriangle(i).corners[0] == kernel.getTriangle(i).corners[1] ||
+			kernel.getTriangle(i).corners[1] == kernel.getTriangle(i).corners[2] ||
+			kernel.getTriangle(i).corners[2] == kernel.getTriangle(i).corners[0]) {
+			cout << "errorrrrr: triangle no: " << i << endl;
+			num_of_irregular_triangles++;
+		}
 	}
+	cout << "num of irregular triangles is: " << num_of_irregular_triangles << endl;
+
 }
 
-Grid::Grid(Mesh& hostMesh) {
+
+
+Grid::Grid(const Mesh& hostMesh, double* leastCoordinates, double* mostCoordinates, int* gridDimension, double cellSizeRatio) {
+
+	if (leastCoordinates == NULL)
+		this->defineGridByMeshCoordinates(hostMesh);								// USE MESH BOUNDARY BOX TO DEFINE GRID
+	else
+		this->defineGridByExternalCoordinates(leastCoordinates, mostCoordinates);	// USE THE GIVEN BOUNDARY BOX TO DEFINE GRID
+
+	if (gridDimension)
+		this->partitionGridByNumOfCells(gridDimension);
+	else
+		this->partitionGridByDiagonalRatio(cellSizeRatio);
+}
+
+void Grid::defineGridByMeshCoordinates(const Mesh& hostMesh) {
 
 	for (int j = 0; j < 3; j++) {
 		this->minGridCoords[j] = numeric_limits<double>::infinity();
@@ -246,9 +207,19 @@ Grid::Grid(Mesh& hostMesh) {
 				this->maxGridCoords[j] = vertex.coords[j];
 		}
 	}
+
 }
 
-void Grid::constructGridByCellSize(double cellSize) {
+void Grid::defineGridByExternalCoordinates(double* leastCoordinates, double* mostCoordinates) {
+
+	for (int j = 0; j < 3; j++) {
+		this->minGridCoords[j] = leastCoordinates[j];
+		this->maxGridCoords[j] = mostCoordinates[j];
+	}
+
+}
+
+void Grid::partitionGridByCellSize(double cellSize) {
 
 	for (int j = 0; j < 3; j++)
 		this->cellSize[j] = cellSize;
@@ -271,7 +242,7 @@ void Grid::constructGridByCellSize(double cellSize) {
 
 }
 
-void Grid::constructGridByDiagonalRatio(double ratio) {
+void Grid::partitionGridByDiagonalRatio(double ratio) {
 
 	// compute each edge length of the grid
 	double edgeLength[3];
@@ -282,11 +253,11 @@ void Grid::constructGridByDiagonalRatio(double ratio) {
 	double diagonal = sqrt((edgeLength[0] * edgeLength[0]) + (edgeLength[1] * edgeLength[1]) + (edgeLength[2] * edgeLength[2]));
 	double cellSize = diagonal * ratio;
 
-	constructGridByCellSize(cellSize);
+	partitionGridByCellSize(cellSize);
 
 }
 
-void Grid::constructGridByNumOfCells(int gridDimension[3]) {
+void Grid::partitionGridByNumOfCells(int gridDimension[3]) {
 
 	for (int d = 0; d < 3; d++) {
 		this->numOfCells[d] = gridDimension[d];
@@ -332,3 +303,14 @@ int* Grid::findHomeCell(double* point) {
 
 	return cell_indices;
 }
+
+double* Grid::findCellCoords(int i, int j, int k) {
+
+	int cell_indices[3] = { i, j, k };
+	double* cornerCoords = new double[3];
+	for (int c = 0; c < 3; c++)
+		cornerCoords[c] = minGridCoords[c] + (cell_indices[c] * cellSize[c]);
+
+	return cornerCoords;
+}
+

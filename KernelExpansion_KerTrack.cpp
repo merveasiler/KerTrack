@@ -57,18 +57,9 @@ void KernelExpansion_KerTrack::expandKernel() {
 			break;
 	}
 
-//	cout << "[number of kernel edges: " << number_of_kernel_edges << "], number of kernel faces: " << number_of_kernel_faces << "]" << endl;
-/*
-	int num_of_non_kernel_points = 0;
-	for (int i = 0; i < kernel.getNumOfVerts(); i++) {
-		if (findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON ||
-			findClosestValueSatisfiedByPoint(kernel.getVertex(i).coords, halfSpaceSet) >  3*EPSILON) {
-			num_of_non_kernel_points++;
-		}
-	}
-	cout << "num of non-kernel points is: " << num_of_non_kernel_points << endl;
-*/
+	//	cout << "[number of kernel edges: " << number_of_kernel_edges << "], number of kernel faces: " << number_of_kernel_faces << "]" << endl;
+
+	// checkKernelForNonKernelVertices();
 
 }
 

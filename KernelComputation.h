@@ -12,21 +12,11 @@ void doExperimentForPaper(string meshName);
 
 void ComputeKernel(string meshName, string algoType);
 
-/*
-Mesh* ComputeKernelBySDFKer(Mesh* mesh, double cellSizeRatio);
+void ComputeBatchKernel(string inputFolderName, string outputFolderName, string algoType);
 
-Mesh* ComputeKernelBySDFKerPlus(Mesh* mesh, double cellSizeRatio, double* extremeDirection);
+Mesh ComputeKernelByKerTrack(Mesh& mesh);
 
-Mesh* ComputeKernelByMDFKer(Mesh* mesh, int gridDimension[3]);
-
-Mesh* ComputeKernelByMDFKerPlus(Mesh* mesh, double cellSizeRatio);
-*/
-
-void BatchComputeKernel(string folderName);
-
-Mesh* ComputeKernelByKerTrack(Mesh& mesh);
-
-Mesh* ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection);
+Mesh ComputeKernelByCGAL(Mesh& mesh, double* extremeDirection);
 
 void FindKernelPoint_SDLP(string meshName);
 

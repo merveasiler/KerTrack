@@ -8,7 +8,7 @@
 #include "ComputeKernelByCGAL.h"
 #include "CGALUtils.h"
 
-Mesh* computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint) {
+Mesh computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint) {
 
     vector<double*> halfSpaceCoeffs = computeHalfSpaceCoeffsFromTriangles(hostMesh.getAllTris(), hostMesh.getAllVerts());
 
@@ -27,6 +27,6 @@ Mesh* computeKernelByCGAL(Mesh& hostMesh, double* kernelPoint) {
     //CGAL::halfspace_intersection_3(planes.begin(), planes.end(), chull, CGALPoint(kernelPoint[0], kernelPoint[1], kernelPoint[2]));   
     //std::cout << "The convex hull contains " << num_vertices(chull) << " vertices" << std::endl;
 
-    Mesh* kernel = convertCGALMeshToMesh(chull);
+    Mesh kernel = convertCGALMeshToMesh(chull);
     return kernel;
 }
