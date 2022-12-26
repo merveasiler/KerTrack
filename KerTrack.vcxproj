@@ -102,7 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;COIN_DLL;SOWIN_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VS_Workspace\3D_Libraries\eigen-3.3.7;D:\VS_Workspace\3D_Libraries\Coin3D\include;D:\VS_Workspace\3D_Libraries\vcpkg\installed\x86-windows\include;D:\VS_Workspace\3D_Libraries\CGAL-5.3\include;D:\VS_Workspace\3D_Libraries\boost_1_76_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\VS_Workspace\3D_Libraries\eigen-3.3.7;D:\VS_Workspace\3D_Libraries\Coin3D\include;D:\VS_Workspace\3D_Libraries\vcpkg\installed\x86-windows\include;D:\VS_Workspace\3D_Libraries\CGAL-5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

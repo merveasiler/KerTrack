@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 			ComputeKernel(shape_path, command_type);
 
 		// COMPUTE KERNEL BY KERTRACK
-		// Example: mdfker-turbo C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj
+		// Example: kertrack C:/Users/Merve/3D_DATABASES/DB-Star-shaped-meshes/Banana.obj
 		else if (command_type == "kertrack")
 			ComputeKernel(shape_path, command_type);
 
