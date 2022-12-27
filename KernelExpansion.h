@@ -6,13 +6,6 @@
 #include "BasicGeometricElements.h"
 #include <queue>
 
-enum class NeighborPolarity {
-	ONE_SIDED,
-	DISTINCT_SIDED_INCLUSION,
-	DISTINCT_SIDED_EXCLUSION,
-	NO_POLARITY
-};
-
 struct Grid {
 	int numOfCells[3];	// number of cells for each of the three dimension
 	double cellSize[3];	// length of the edges for each of the three dimension, normally equal because of cube
